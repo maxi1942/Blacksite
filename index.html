@@ -71,7 +71,7 @@ button.danger{border-color:var(--red);color:#ffb0a6;}
 #log{background:#0b0e0a;border:1px solid var(--line);padding:8px;height:72px;overflow-y:auto;font-size:11px;line-height:1.5;color:var(--dim);}
 #log .hit{color:var(--amber2);} #log .crit{color:var(--amber);font-weight:600;}
 #log .dmg{color:var(--red);} #log .good{color:var(--green);} #log .sys{color:var(--cyan);}
-.actbtn{flex:1;min-width:44%;}
+.actbtn{flex:1 1 45%;min-width:45%;padding:7px 8px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .wicon{display:inline-block;width:26px;color:var(--amber);margin-right:6px;vertical-align:-2px;}
 .wicon svg{width:26px;height:15px;display:inline-block;}
 .invrow .wicon,.slotrow .wicon{color:var(--dim);}
@@ -85,8 +85,25 @@ button.danger{border-color:var(--red);color:#ffb0a6;}
 .slotrow button,.invrow button{padding:5px 8px;font-size:11px;}
 .invrow{display:flex;justify-content:space-between;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);padding:6px 8px;margin-bottom:6px;}
 .invrow .it{flex:1;font-size:12px;}
-.actbtn .cost{float:right;color:var(--amber);font-size:11px;}
-.actbtn .sub{display:block;font-size:11px;color:var(--dim);margin-top:2px;}
+.actbtn .cost{float:right;color:var(--amber);font-size:10px;}
+.actbtn .sub{display:block;font-size:10px;color:var(--dim);margin-top:1px;}
+.skillbtn.cd{opacity:.45;}
+
+/* Weapon art (detailed side profiles, tinted by rarity) */
+.wart{display:inline-block;width:66px;margin-right:6px;vertical-align:-7px;color:var(--amber);}
+.wart svg{width:66px;height:22px;display:block;}
+
+/* Bottom nav (map + combat) */
+#bottom-nav{position:fixed;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(13,17,12,.97);border-top:1px solid var(--line2);z-index:40;}
+#bottom-nav button{flex:1;text-align:center;font-size:11px;padding:10px 4px;letter-spacing:.08em;}
+#bottom-nav button b{color:var(--amber);}
+body.hasnav #app{padding-bottom:108px;}
+
+/* Talent tree */
+.tnode{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--panel2);padding:7px 8px;margin-bottom:6px;}
+.tnode.locked{opacity:.45;}
+.tnode .trank{color:var(--amber);font-size:11px;letter-spacing:.1em;}
+.tnode button{padding:6px 10px;font-size:12px;flex:none;}
 
 /* Modal */
 .overlay{position:fixed;inset:0;background:rgba(6,8,5,.88);display:flex;align-items:center;justify-content:center;padding:14px;z-index:50;}
@@ -205,21 +222,7 @@ body.dmgflash::after{content:'';position:fixed;inset:0;background:radial-gradien
       <div class="eyebrow" id="map-dungeon-name"></div>
       <div class="small" id="map-tier"></div>
     </div>
-    <button style="width:100%;margin-bottom:10px" id="btn-gear">☰ OPERATIVE — STATS, GEAR & BAG</button>
     <div id="map-render"></div>
-  </div>
-
-  <!-- ============ GEAR / INVENTORY ============ -->
-  <div id="screen-gear" class="hidden">
-    <div class="eyebrow">// OPERATIVE</div>
-    <div class="hud" id="char-stats" style="margin-bottom:10px;font-size:12px;line-height:1.7"></div>
-    <div class="eyebrow">// TALENTS TAKEN</div>
-    <div id="char-talents" class="small" style="margin-bottom:12px"></div>
-    <div class="eyebrow">// LOADOUT</div>
-    <div id="equip-grid"></div>
-    <div class="eyebrow" style="margin-top:12px">// INVENTORY <span id="inv-count"></span></div>
-    <div id="inv-list"></div>
-    <button class="primary" style="width:100%" id="btn-gear-back">← BACK TO MAP</button>
   </div>
 
   <!-- ============ COMBAT ============ -->
@@ -291,21 +294,28 @@ body.dmgflash::after{content:'';position:fixed;inset:0;background:radial-gradien
 
 </div>
 
-<!-- LEVEL UP MODAL -->
-<div id="modal-levelup" class="overlay hidden">
-  <div class="modal hud">
-    <div class="eyebrow">// PROMOTION</div>
-    <h2 style="margin:4px 0">LEVEL <span id="lu-level"></span> — PICK ONE TALENT</h2>
-    <div id="lu-opts"></div>
-  </div>
-</div>
-
 <!-- REWARD MODAL -->
 <div id="modal-reward" class="overlay hidden">
   <div class="modal hud">
     <div class="eyebrow">// AREA SECURED</div>
     <div id="rw-body" style="margin:8px 0"></div>
+    <div id="rw-offer"></div>
     <button class="primary" style="width:100%" id="btn-rw-ok">CONTINUE ▸</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (map + combat) -->
+<div id="bottom-nav" class="hidden">
+  <button data-p="char">⛨ CHARACTER</button>
+  <button data-p="inv">▤ INVENTORY</button>
+  <button data-p="tree">✦ TALENTS <b id="tp-badge"></b></button>
+</div>
+
+<!-- SLIDE-UP PANEL (character / inventory / talents) -->
+<div id="modal-panel" class="overlay hidden">
+  <div class="modal hud">
+    <div id="panel-body"></div>
+    <button class="primary" style="width:100%;margin-top:8px" id="btn-panel-close">CLOSE ✕</button>
   </div>
 </div>
 
@@ -392,25 +402,25 @@ function muzzleFire(){retrig($('muzzle'),'fire');}
 /* =================== DATA =================== */
 const WEAPONS={
   // Class pistols — infinite ammo, always in the locked PISTOL slot
-  scout:{id:'scout',name:'Scout Pistol',cls:'marksman',ap:1,min:4,max:6,crit:.20,cx:2.0,desc:'Light, precise. Rewards the patient.'},
-  riveter:{id:'riveter',name:'Riveter',cls:'mechanic',ap:1,min:4,max:6,crit:.10,cx:1.5,desc:'Workshop tool, technically a firearm.'},
-  autopistol:{id:'autopistol',name:'Auto Pistol',cls:'assault',ap:1,min:2,max:4,hits:2,crit:.10,cx:1.5,desc:'Fires a 2-round burst.'},
-  medpistol:{id:'medpistol',name:'Med Pistol',cls:'medic',ap:1,min:4,max:6,crit:.10,cx:1.5,desc:'Standard issue for corpsmen.'},
+  scout:{id:'scout',name:'Scout Pistol',sn:'SCOUT',cls:'marksman',ap:1,min:4,max:6,crit:.20,cx:2.0,desc:'Light, precise. Rewards the patient.'},
+  riveter:{id:'riveter',name:'Riveter',sn:'RIVETER',cls:'mechanic',ap:1,min:4,max:6,crit:.10,cx:1.5,desc:'Workshop tool, technically a firearm.'},
+  autopistol:{id:'autopistol',name:'Auto Pistol',sn:'AUTO-9',cls:'assault',ap:1,min:2,max:4,hits:2,crit:.10,cx:1.5,desc:'Fires a 2-round burst.'},
+  medpistol:{id:'medpistol',name:'Med Pistol',sn:'MED-P',cls:'medic',ap:1,min:4,max:6,crit:.10,cx:1.5,desc:'Standard issue for corpsmen.'},
   // Marksman — mag = shots per combat
-  bolt:{id:'bolt',name:'M24 Bolt Rifle',cls:'marksman',ap:2,min:9,max:13,crit:.25,cx:2.0,mag:4,desc:'Slow, surgical.',price:70},
-  dmr:{id:'dmr',name:'DMR-7',cls:'marksman',ap:1,min:6,max:9,crit:.20,cx:1.8,mag:6,desc:'Semi-auto precision.',price:80},
-  as50:{id:'as50',name:'AS50 Anti-Materiel',cls:'marksman',ap:3,min:18,max:25,crit:.30,cx:2.2,mag:2,desc:'Deletes things.',price:150,adv:true},
+  bolt:{id:'bolt',name:'M24 Bolt Rifle',sn:'M24',cls:'marksman',ap:2,min:9,max:13,crit:.25,cx:2.0,mag:4,desc:'Slow, surgical.',price:70},
+  dmr:{id:'dmr',name:'DMR-7',sn:'DMR-7',cls:'marksman',ap:1,min:6,max:9,crit:.20,cx:1.8,mag:6,desc:'Semi-auto precision.',price:80},
+  as50:{id:'as50',name:'AS50 Anti-Materiel',sn:'AS50',cls:'marksman',ap:3,min:18,max:25,crit:.30,cx:2.2,mag:2,desc:'Deletes things.',price:150,adv:true},
   // Mechanic
-  pdw:{id:'pdw',name:'PDW-90',cls:'mechanic',ap:1,min:5,max:7,crit:.10,cx:1.5,mag:8,desc:'Compact and reliable.',price:60},
-  nailer:{id:'nailer',name:'Nail Driver',cls:'mechanic',ap:2,min:10,max:14,crit:.15,cx:1.8,mag:5,desc:'Industrial accident, weaponised.',price:75},
-  scrapcannon:{id:'scrapcannon',name:'Scrap Cannon',cls:'mechanic',ap:2,min:7,max:10,crit:.10,cx:1.5,aoe:true,mag:3,desc:'Hits ALL enemies.',price:140,adv:true},
+  pdw:{id:'pdw',name:'PDW-90',sn:'PDW-90',cls:'mechanic',ap:1,min:5,max:7,crit:.10,cx:1.5,mag:8,desc:'Compact and reliable.',price:60},
+  nailer:{id:'nailer',name:'Nail Driver',sn:'NAILER',cls:'mechanic',ap:2,min:10,max:14,crit:.15,cx:1.8,mag:5,desc:'Industrial accident, weaponised.',price:75},
+  scrapcannon:{id:'scrapcannon',name:'Scrap Cannon',sn:'SCRAP-C',cls:'mechanic',ap:2,min:7,max:10,crit:.10,cx:1.5,aoe:true,mag:3,desc:'Hits ALL enemies.',price:140,adv:true},
   // Assault
-  carbine:{id:'carbine',name:'K4 Carbine',cls:'assault',ap:1,min:5,max:8,crit:.15,cx:1.8,mag:8,desc:'Fast and mean.',price:60},
-  breacher:{id:'breacher',name:'Breacher 12g',cls:'assault',ap:2,min:11,max:16,crit:.15,cx:1.8,mag:4,desc:'Doors optional.',price:85},
-  lmg:{id:'lmg',name:'M60 "PIG"',cls:'assault',ap:3,min:7,max:10,crit:.10,cx:1.5,aoe:true,mag:2,desc:'Hits ALL enemies.',price:150,adv:true},
+  carbine:{id:'carbine',name:'K4 Carbine',sn:'K4',cls:'assault',ap:1,min:5,max:8,crit:.15,cx:1.8,mag:8,desc:'Fast and mean.',price:60},
+  breacher:{id:'breacher',name:'Breacher 12g',sn:'BREACHER',cls:'assault',ap:2,min:11,max:16,crit:.15,cx:1.8,mag:4,desc:'Doors optional.',price:85},
+  lmg:{id:'lmg',name:'M60 "PIG"',sn:'M60',cls:'assault',ap:3,min:7,max:10,crit:.10,cx:1.5,aoe:true,mag:2,desc:'Hits ALL enemies.',price:150,adv:true},
   // Medic
-  syringe:{id:'syringe',name:'Syringe Gun',cls:'medic',ap:1,min:5,max:8,crit:.10,cx:1.5,mag:6,ls:2,desc:'Each hit heals you 2.',price:70},
-  tranq:{id:'tranq',name:'Tranq Rifle',cls:'medic',ap:2,min:9,max:13,crit:.20,cx:1.8,mag:4,desc:'Hits reduce target dmg 25% next attack.',supp:true,price:85},
+  syringe:{id:'syringe',name:'Syringe Gun',sn:'SYRINGE',cls:'medic',ap:1,min:5,max:8,crit:.10,cx:1.5,mag:6,ls:2,desc:'Each hit heals you 2.',price:70},
+  tranq:{id:'tranq',name:'Tranq Rifle',sn:'TRANQ',cls:'medic',ap:2,min:9,max:13,crit:.20,cx:1.8,mag:4,desc:'Hits reduce target dmg 25% next attack.',supp:true,price:85},
 };
 /* ------ RARITY ------ */
 const RARITIES=[
@@ -449,6 +459,28 @@ cannon:`<svg viewBox="0 0 32 20"><rect x="2" y="5" width="18" height="8" rx="2" 
 };
 const WICON_MAP={scout:'pistol',riveter:'pistol',autopistol:'pistol',medpistol:'pistol',pistol:'pistol',bolt:'rifle',dmr:'rifle',carbine:'rifle',tranq:'rifle',as50:'sniper',pdw:'smg',nailer:'smg',syringe:'smg',breacher:'shotgun',lmg:'lmg',scrapcannon:'cannon'};
 function wicon(wid){return `<span class="wicon">${WICONS[WICON_MAP[wid]]||WICONS.pistol}</span>`;}
+/* Detailed weapon art — one side profile per weapon model. Accent parts use
+   currentColor so the art tints to the item's rarity colour. */
+const WD='#11150d',WM='#55644a',WL='#9aa78e';
+function wsvg(inner){return `<svg viewBox="0 0 96 32">${inner}</svg>`;}
+const WART={
+scout:wsvg(`<rect x="20" y="9" width="38" height="7" fill="${WM}"/><rect x="20" y="9" width="38" height="2" fill="currentColor"/><rect x="58" y="10" width="8" height="4" fill="${WD}"/><rect x="54" y="6" width="3" height="3" fill="${WD}"/><path d="M26 16 h12 l-4 12 h-10 Z" fill="${WD}"/><path d="M40 16 h7 v4 h-4 Z" fill="${WD}"/>`),
+riveter:wsvg(`<rect x="18" y="8" width="34" height="10" fill="${WM}"/><rect x="52" y="10" width="14" height="5" fill="${WD}"/><rect x="64" y="9" width="3" height="7" fill="currentColor"/><rect x="24" y="4" width="12" height="4" rx="2" fill="${WD}"/><circle cx="26" cy="13" r="1.8" fill="currentColor"/><circle cx="32" cy="13" r="1.8" fill="${WL}"/><path d="M28 18 h11 l-3 11 h-10 Z" fill="${WD}"/><rect x="40" y="18" width="10" height="5" fill="${WD}"/>`),
+autopistol:wsvg(`<rect x="20" y="9" width="36" height="7" fill="${WM}"/><rect x="20" y="9" width="36" height="2" fill="currentColor"/><rect x="56" y="10" width="9" height="4" fill="${WD}"/><path d="M26 16 h11 l-3 12 h-10 Z" fill="${WD}"/><rect x="30" y="22" width="6" height="8" fill="${WM}"/><path d="M38 16 h7 v4 h-4 Z" fill="${WD}"/>`),
+medpistol:wsvg(`<rect x="20" y="9" width="38" height="7" fill="${WM}"/><rect x="58" y="10" width="8" height="4" fill="${WD}"/><path d="M26 16 h12 l-4 12 h-10 Z" fill="${WD}"/><rect x="34" y="9" width="9" height="7" fill="${WD}"/><rect x="37.5" y="9.5" width="2" height="6" fill="currentColor"/><rect x="35" y="11.5" width="7" height="2" fill="currentColor"/>`),
+bolt:wsvg(`<rect x="30" y="10" width="58" height="3.5" fill="${WM}"/><path d="M6 10 h26 v6 l-14 6 h-12 Z" fill="${WD}"/><rect x="40" y="5" width="16" height="4" rx="2" fill="${WD}"/><rect x="54" y="5" width="3" height="4" fill="currentColor"/><rect x="43" y="9" width="2" height="2" fill="${WL}"/><rect x="51" y="9" width="2" height="2" fill="${WL}"/><path d="M46 14 l3 6 h3 l-2 -6 Z" fill="${WL}"/><rect x="54" y="13" width="8" height="5" fill="${WD}"/><rect x="86" y="8" width="3" height="3" fill="currentColor"/>`),
+dmr:wsvg(`<rect x="26" y="10" width="60" height="4" fill="${WM}"/><path d="M6 10 h22 v7 l-12 5 h-10 Z" fill="${WD}"/><rect x="36" y="4" width="18" height="4" rx="2" fill="${WD}"/><rect x="52" y="4" width="3" height="4" fill="currentColor"/><rect x="42" y="8" width="2" height="3" fill="${WL}"/><rect x="48" y="8" width="2" height="3" fill="${WL}"/><path d="M50 14 h9 l3 9 h-8 Z" fill="${WD}"/><path d="M42 14 h6 v5 h-4 Z" fill="${WD}"/><rect x="84" y="9" width="6" height="2" fill="${WD}"/>`),
+as50:wsvg(`<rect x="24" y="11" width="56" height="6" fill="${WM}"/><path d="M4 10 h22 v9 h-18 Z" fill="${WD}"/><rect x="78" y="10" width="14" height="8" fill="${WD}"/><rect x="80" y="8" width="2" height="12" fill="currentColor"/><rect x="85" y="8" width="2" height="12" fill="currentColor"/><rect x="34" y="4" width="20" height="5" rx="2" fill="${WD}"/><rect x="52" y="4" width="3" height="5" fill="currentColor"/><rect x="44" y="17" width="10" height="7" fill="${WD}"/><line x1="62" y1="17" x2="58" y2="28" stroke="${WL}" stroke-width="2"/><line x1="66" y1="17" x2="70" y2="28" stroke="${WL}" stroke-width="2"/>`),
+pdw:wsvg(`<rect x="22" y="8" width="34" height="9" fill="${WM}"/><rect x="14" y="10" width="8" height="5" fill="${WD}"/><rect x="56" y="10" width="10" height="4" fill="${WD}"/><rect x="24" y="5" width="28" height="3" fill="${WD}"/><rect x="27" y="5" width="2" height="3" fill="currentColor"/><rect x="33" y="5" width="2" height="3" fill="currentColor"/><rect x="39" y="5" width="2" height="3" fill="currentColor"/><rect x="36" y="17" width="6" height="10" fill="${WM}"/><path d="M26 17 h8 l-2 9 h-7 Z" fill="${WD}"/>`),
+nailer:wsvg(`<rect x="20" y="8" width="30" height="10" fill="${WM}"/><path d="M50 8 l10 3 v5 l-10 2 Z" fill="${WD}"/><rect x="60" y="12" width="7" height="2" fill="currentColor"/><rect x="24" y="4" width="18" height="4" rx="2" fill="${WD}"/><path d="M30 18 h10 l-3 10 h-9 Z" fill="${WD}"/><rect x="44" y="18" width="8" height="6" fill="${WD}"/><circle cx="26" cy="13" r="1.6" fill="currentColor"/><circle cx="32" cy="13" r="1.6" fill="currentColor"/>`),
+scrapcannon:wsvg(`<rect x="14" y="8" width="40" height="12" rx="3" fill="${WM}"/><rect x="52" y="9" width="26" height="10" fill="${WD}"/><rect x="76" y="7" width="5" height="14" fill="currentColor"/><circle cx="22" cy="12" r="1.5" fill="${WL}"/><circle cx="30" cy="12" r="1.5" fill="${WL}"/><circle cx="38" cy="12" r="1.5" fill="${WL}"/><circle cx="34" cy="22" r="6" fill="${WD}" stroke="${WL}"/><path d="M18 20 h8 l-3 9 h-8 Z" fill="${WD}"/>`),
+carbine:wsvg(`<rect x="24" y="9" width="56" height="5" fill="${WM}"/><path d="M6 9 h18 v6 l-10 5 h-8 Z" fill="${WD}"/><rect x="30" y="5" width="14" height="4" fill="${WD}"/><rect x="80" y="10" width="8" height="3" fill="${WD}"/><rect x="76" y="5" width="2" height="5" fill="currentColor"/><path d="M48 14 q0 10 8 12 l3 -4 q-6 -2 -5 -8 Z" fill="${WD}"/><path d="M38 14 h7 l-2 9 h-7 Z" fill="${WD}"/><rect x="58" y="14" width="14" height="3" fill="${WL}"/>`),
+breacher:wsvg(`<rect x="22" y="9" width="62" height="5" fill="${WM}"/><rect x="22" y="14" width="46" height="3" fill="${WD}"/><path d="M4 9 h18 v8 l-10 6 h-8 Z" fill="${WD}"/><rect x="44" y="17" width="14" height="5" rx="2" fill="currentColor"/><rect x="84" y="9" width="4" height="5" fill="${WD}"/><path d="M32 17 h7 l-2 8 h-7 Z" fill="${WD}"/>`),
+lmg:wsvg(`<rect x="22" y="9" width="60" height="6" fill="${WM}"/><path d="M4 9 h18 v8 h-14 Z" fill="${WD}"/><rect x="30" y="4" width="12" height="4" fill="${WD}"/><rect x="40" y="15" width="12" height="10" fill="${WD}" stroke="${WL}"/><rect x="42" y="17" width="8" height="2" fill="currentColor"/><rect x="82" y="8" width="8" height="4" fill="${WD}"/><line x1="66" y1="15" x2="62" y2="27" stroke="${WL}" stroke-width="2"/><line x1="72" y1="15" x2="76" y2="27" stroke="${WL}" stroke-width="2"/>`),
+syringe:wsvg(`<rect x="22" y="10" width="30" height="8" fill="${WM}"/><rect x="26" y="5" width="18" height="5" rx="2" fill="${WL}"/><rect x="28" y="6" width="10" height="3" fill="currentColor"/><rect x="52" y="12" width="10" height="3" fill="${WD}"/><line x1="62" y1="13.5" x2="74" y2="13.5" stroke="currentColor" stroke-width="1.5"/><path d="M28 18 h10 l-3 10 h-9 Z" fill="${WD}"/>`),
+tranq:wsvg(`<rect x="26" y="10" width="56" height="3.5" fill="${WM}"/><path d="M8 10 h20 v6 l-12 5 h-8 Z" fill="${WD}"/><rect x="38" y="5" width="14" height="4" rx="2" fill="${WD}"/><rect x="50" y="5" width="2" height="4" fill="currentColor"/><rect x="48" y="13" width="6" height="5" fill="${WD}"/><path d="M82 10 l8 1.7 -8 1.8 Z" fill="currentColor"/>`),
+};
+function wart(wid,color){return `<span class="wart"${color?` style="color:${color}"`:''}>${WART[wid]||''}</span>`;}
 const GICONS={
 helmet:`<svg viewBox="0 0 32 20"><path d="M6 16 a10 11 0 0 1 20 0 Z" fill="currentColor"/><rect x="8" y="12" width="16" height="2.5" fill="#10140f"/></svg>`,
 chest:`<svg viewBox="0 0 32 20"><path d="M8 2 h16 l3 5 v11 h-22 v-11 Z" fill="currentColor"/><rect x="13" y="7" width="6" height="6" fill="#10140f"/></svg>`,
@@ -457,7 +489,7 @@ boots:`<svg viewBox="0 0 32 20"><path d="M8 2 h8 v9 h6 a5 5 0 0 1 5 5 v2 h-19 Z"
 special:`<svg viewBox="0 0 32 20"><path d="M16 1 l10 4 v6 c0 5 -5 8 -10 8 c-5 0 -10 -3 -10 -8 v-6 Z" fill="currentColor"/></svg>`,
 ammo:`<svg viewBox="0 0 32 20"><rect x="5" y="6" width="5" height="12" fill="currentColor"/><rect x="13" y="4" width="5" height="14" fill="currentColor"/><rect x="21" y="6" width="5" height="12" fill="currentColor"/><path d="M5 6 a2.5 3 0 0 1 5 0 Z M13 4 a2.5 3 0 0 1 5 0 Z M21 6 a2.5 3 0 0 1 5 0 Z" fill="currentColor"/></svg>`,
 };
-function itemIcon(it){return it.kind==='weapon'?wicon(it.wid):`<span class="wicon">${GICONS[it.slot]||GICONS.special}</span>`;}
+function itemIcon(it){return it.kind==='weapon'?wart(it.wid,rc(it)):`<span class="wicon">${GICONS[it.slot]||GICONS.special}</span>`;}
 function itemLine(it){return `${itemIcon(it)}<b style="color:${rc(it)}">${it.name}</b>`;}
 let UID=1;
 function genGear(tier,slot,minR){
@@ -492,79 +524,119 @@ function statText(st){
 }
 const CLASSES={
   marksman:{id:'marksman',name:'Marksman',acc:'accent-mk',hp:70,start:'scout',
-    blurb:'High single-shot damage, crit-fishing. Signature skill: AIM (offered at level-up).'},
+    blurb:'High single-shot damage, crit-fishing. Starts with the AIM skill.'},
   mechanic:{id:'mechanic',name:'Mechanic',acc:'accent-mc',hp:85,start:'riveter',
-    blurb:'Area control through hardware. Signature skill: DEPLOY TURRET (offered at level-up).'},
+    blurb:'Area control through hardware. Starts with the TURRET skill.'},
   assault:{id:'assault',name:'Assault',acc:'accent-as',hp:80,start:'autopistol',locked:true,
-    blurb:'Aggression rewarded. Signature skill: ADRENALINE. Unlock in the Armory.'},
+    blurb:'Aggression rewarded. Starts with ADRENALINE. Unlock in the Armory.'},
   medic:{id:'medic',name:'Medic',acc:'accent-md',hp:75,start:'medpistol',locked:true,
-    blurb:'Sustain and attrition. Signature skill: TRIAGE (in-combat healing). Unlock in the Armory.'},
+    blurb:'Sustain and attrition. Starts with TRIAGE. Unlock in the Armory.'},
 };
-const TALENTS={
-  marksman:[
-    {id:'mk0',n:'AIM [skill]',d:'Active: 1 AP — next shot +25% crit, +0.3 crit mult (stacks 3)',sig:true,f:p=>p.flags.aim=true},
-    {id:'mk1',n:'Deadeye',d:'+15% crit chance on all weapons',f:p=>p.mods.crit+=.15},
-    {id:'mk2',n:'Heavy Rounds',d:'+15% weapon damage',f:p=>p.mods.dmg+=.15},
-    {id:'mk3',n:'Headhunter',d:'Crits gain +1.0 crit multiplier',f:p=>p.mods.cx+=1},
-    {id:'mk4',n:'Steady Hands',d:'AIM also grants +30% damage to the next shot',f:p=>p.flags.steady=true},
-    {id:'mk5',n:'Adrenal Focus',d:'+1 AP the first time you kill each turn',f:p=>p.flags.killap=true},
-    {id:'mk6',n:'Thick Skin',d:'+20 max HP',f:p=>{p.maxhp+=20;p.hp+=20;}},
-    {id:'mk7',n:'Scavenger',d:'+40% gold from combat',f:p=>p.mods.gold+=.4},
-    {id:'mk8',n:'Field Dressing',d:'Heal 15% max HP after each combat',f:p=>p.flags.postheal=true},
-    {id:'mk9',n:'Quick Holster',d:'1-AP weapons deal +40% damage',f:p=>p.flags.quick=true},
-  ],
-  marksmanAdv:[
-    {id:'mkA1',n:'Double Tap',d:'25% chance any shot fires twice',f:p=>p.flags.doubletap=true},
-    {id:'mkA2',n:'Executioner',d:'Enemies below 25% HP take double damage',f:p=>p.flags.exec=true},
-    {id:'mkA3',n:'Ghillie Wrap',d:'20% chance to dodge attacks',f:p=>p.mods.dodge+=.2},
-  ],
-  mechanic:[
-    {id:'mc0',n:'DEPLOY TURRET [skill]',d:'Active: 2 AP — turret fires every turn (3 rounds, max 2 active)',sig:true,f:p=>p.flags.turret=true},
-    {id:'mc1',n:'Reinforced Turrets',d:'Turrets +3 damage and +1 round',f:p=>{p.mods.tdmg+=3;p.mods.tammo+=1;}},
-    {id:'mc2',n:'Rapid Deploy',d:'DEPLOY TURRET costs 1 AP',f:p=>p.flags.cheapturret=true},
-    {id:'mc3',n:'Minefield',d:'New ability: MINE — next enemy that attacks you takes 15 damage',f:p=>p.flags.mines=true},
-    {id:'mc4',n:'Overclock',d:'+15% weapon damage',f:p=>p.mods.dmg+=.15},
-    {id:'mc5',n:'Plating',d:'+1 armor (each hit against you reduced by 1)',f:p=>p.armor+=1},
-    {id:'mc6',n:'Thick Skin',d:'+20 max HP',f:p=>{p.maxhp+=20;p.hp+=20;}},
-    {id:'mc7',n:'Repair Drone',d:'Heal 4 HP at the start of each of your turns in combat',f:p=>p.flags.repair=true},
-    {id:'mc8',n:'Salvage Rig',d:'+40% gold from combat',f:p=>p.mods.gold+=.4},
-    {id:'mc9',n:'Targeting Chip',d:'Turrets can crit (25%, x2)',f:p=>p.flags.tcrit=true},
-  ],
-  mechanicAdv:[
-    {id:'mcA1',n:'Sentry Network',d:'Max 3 active turrets',f:p=>p.mods.tmax=3},
-    {id:'mcA2',n:'EMP Burst',d:'New ability: EMP — stun ALL enemies for 1 turn (once per combat)',f:p=>p.flags.emp=true},
-    {id:'mcA3',n:'Ablative Shell',d:'+2 armor',f:p=>p.armor+=2},
-  ],
-  assault:[
-    {id:'as0',n:'ADRENALINE [skill]',d:'Active: 1 AP — gain +2 AP, once per combat',sig:true,f:p=>p.flags.adrenaline=true},
-    {id:'as1',n:'Rapid Fire',d:'+15% weapon damage',f:p=>p.mods.dmg+=.15},
-    {id:'as2',n:'Adrenaline Junkie',d:'ADRENALINE usable twice per combat',f:p=>p.flags.adr2=true},
-    {id:'as3',n:'Bloodlust',d:'Heal 5 HP on every kill',f:p=>p.flags.bloodlust=true},
-    {id:'as4',n:'Frag Pouch',d:'New ability: FRAG — 12 damage to ALL enemies (once per combat)',f:p=>p.flags.frag=true},
-    {id:'as5',n:'Suppressive Fire',d:'Your attacks reduce the target\'s next attack by 25%',f:p=>p.flags.suppress=true},
-    {id:'as6',n:'Thick Skin',d:'+20 max HP',f:p=>{p.maxhp+=20;p.hp+=20;}},
-    {id:'as7',n:'Berserker',d:'+40% damage while below half HP',f:p=>p.flags.berserk=true},
-    {id:'as8',n:'Point Man',d:'Your first attack each combat deals double damage',f:p=>p.flags.pointman=true},
-    {id:'as9',n:'Looter',d:'+40% gold from combat',f:p=>p.mods.gold+=.4},
-  ],
-  medic:[
-    {id:'md0',n:'TRIAGE [skill]',d:'Active: 1 AP — heal 12 HP (2× per combat)',sig:true,f:p=>p.flags.triage=true},
-    {id:'md1',n:'Field Surgeon',d:'TRIAGE heals +8 more',f:p=>p.flags.fsurg=true},
-    {id:'md2',n:'COMBAT DRUGS [skill]',d:'Active: 1 AP — +25% damage for the rest of this turn',f:p=>p.flags.drugs=true},
-    {id:'md3',n:'Post-Op Care',d:'Heal 15% max HP after each combat',f:p=>p.flags.postheal=true},
-    {id:'md4',n:'Thick Skin',d:'+20 max HP',f:p=>{p.maxhp+=20;p.hp+=20;}},
-    {id:'md5',n:'Vital Strikes',d:'+10% crit chance',f:p=>p.mods.crit+=.10},
-    {id:'md6',n:'Organ Trade',d:'+40% gold from combat',f:p=>p.mods.gold+=.4},
-    {id:'md7',n:'Guardian Angel',d:'Once per combat, survive a lethal hit at 1 HP',f:p=>p.flags.laststand=true},
-    {id:'md8',n:'Stim Rush',d:'Using a consumable also grants +1 AP',f:p=>p.flags.stimrush=true},
-    {id:'md9',n:'Immunized',d:'+1 armor and +10 max HP',f:p=>{p.armor+=1;p.maxhp+=10;p.hp+=10;}},
-  ],
-  assaultAdv:[
-    {id:'asA1',n:'Killstreak',d:'Each kill grants +10% damage for the rest of combat',f:p=>p.flags.killstreak=true},
-    {id:'asA2',n:'Juggernaut Rig',d:'+2 armor',f:p=>p.armor+=2},
-    {id:'asA3',n:'Last Stand',d:'Once per combat, survive a lethal hit at 1 HP',f:p=>p.flags.laststand=true},
-  ],
+const SIG_SKILL={marksman:'aim',mechanic:'turret',assault:'adrenaline',medic:'triage'};
+/* ------ SKILLS — active abilities with cooldowns (cooldowns tick per combat turn) ------ */
+function tr(id){return (P&&P.tree[id])||0;}                    // talent-tree rank
+function sigR(cls){return P.cls===cls?tr('sig'):0;}            // Specialist rank, class-gated
+function grenadeDmg(){const m=1+.3*tr('demo');return{min:Math.round((8+3*RUN.tier)*m),max:Math.round((12+3*RUN.tier)*m)};}
+function sprayDmg(){const m=1+.3*tr('demo');return{min:Math.round((3+RUN.tier)*m),max:Math.round((5+RUN.tier)*m)};}
+function healAmt(id){return (id==='triage'?12+6*sigR('medic'):10+4*RUN.tier)+8*tr('medic2');}
+function mineDmg(){return 12+4*RUN.tier;}
+function turretDmg(){return 3*sigR('mechanic');}
+const SKILLS={
+  aim:{n:'AIM',ap:1,cd:0,sig:true,desc:'Next shot: +25% crit chance, +0.3 crit multiplier. Stacks up to 3.',
+    sub:()=>`+${25+sigR('marksman')*10}% crit ×${C.aim}`,
+    can:()=>C.aim<3,
+    use:()=>{C.aim++;log('Lining up the shot. AIM ×'+C.aim,'sys');}},
+  turret:{n:'TURRET',ap:2,cd:2,sig:true,desc:'Deploy an auto-turret that fires every turn until its rounds run out.',
+    sub:()=>`${4+turretDmg()}–${6+turretDmg()}/turn ×${3+sigR('mechanic')}`,
+    can:()=>C.turrets.length<P.mods.tmax,
+    use:()=>{C.turrets.push({ammo:3+sigR('mechanic')});log('Turret online.','sys');}},
+  adrenaline:{n:'ADRENALINE',ap:1,cd:4,sig:true,desc:'Shot of adrenaline — gain extra AP this turn.',
+    sub:()=>'+'+(2+sigR('assault'))+' AP now',
+    use:()=>{C.ap+=2+sigR('assault');log('Adrenaline. +'+(2+sigR('assault'))+' AP.','sys');}},
+  triage:{n:'TRIAGE',ap:1,cd:3,sig:true,desc:'Combat medicine — heal yourself mid-fight.',
+    sub:()=>'heal '+healAmt('triage'),
+    can:()=>P.hp<P.maxhp,
+    use:()=>{const a=healAmt('triage');heal(a);log('Triage: +'+a+' HP.','good');}},
+  grenade:{n:'GRENADE',ap:2,cd:3,desc:'Frag out — heavy damage to ALL enemies, ignores armor. 2 AP · cooldown 3.',
+    sub:()=>{const d=grenadeDmg();return `${d.min}–${d.max} ALL`;},
+    use:()=>{const d=grenadeDmg();shakeScreen();C.foes.forEach(f=>{if(f.hp>0)hitEnemy(f,ri(d.min,d.max),false,'Grenade');});}},
+  spray:{n:'SPRAY',ap:2,cd:2,desc:'Empty a mag — 5 wild shots land on random enemies. 2 AP · cooldown 2.',
+    sub:()=>{const d=sprayDmg();return `5× ${d.min}–${d.max} random`;},
+    use:()=>{const d=sprayDmg();for(let k=0;k<5;k++){const alive=C.foes.filter(f=>f.hp>0);if(!alive.length)break;const f=pick(alive);muzzleFire();hitEnemy(f,Math.max(1,ri(d.min,d.max)-f.armor),false,'Spray');}}},
+  flash:{n:'FLASHBANG',ap:1,cd:4,desc:'Stuns ALL enemies — they skip their next turn. 1 AP · cooldown 4.',
+    sub:()=>'stun all 1 turn',
+    use:()=>{C.foes.forEach(f=>{if(f.hp>0){f.stun=1;setIntent(f);}});log('Flashbang out — hostiles stunned.','sys');}},
+  camo:{n:'CAMO',ap:1,cd:5,desc:'Camouflage — enemies cannot hit you for 2 rounds. 1 AP · cooldown 5.',
+    sub:()=>'untouchable '+(2+tr('ghost'))+' rounds',
+    use:()=>{C.camo=2+tr('ghost');log('Camouflage active — you fade into the terrain.','good');}},
+  patch:{n:'FIELD PATCH',ap:1,cd:3,desc:'Quick self-heal, scales with threat level. 1 AP · cooldown 3.',
+    sub:()=>'heal '+healAmt('patch'),
+    can:()=>P.hp<P.maxhp,
+    use:()=>{const a=healAmt('patch');heal(a);log('Patched up: +'+a+' HP.','good');}},
+  mine:{n:'MINE',ap:1,cd:2,desc:'Arm a mine — the next enemy that attacks you takes heavy damage. 1 AP · cooldown 2.',
+    sub:()=>mineDmg()+' to next attacker',
+    use:()=>{C.mines++;log('Mine armed.','sys');}},
 };
+const GENERIC_SKILLS=['grenade','spray','flash','camo','patch','mine'];
+function skillAP(id){return (id==='turret'&&tr('rdep'))?1:SKILLS[id].ap;}
+function skillCD(id){const b=SKILLS[id].cd;return b<=0?0:Math.max(1,b-tr('cool'));}
+/* ------ TALENT TREE — level-ups grant points; deeper rows need points spent in that branch ------ */
+const TREE=[
+ {br:'COMBAT',nodes:[
+  {id:'hvy',n:'Heavy Rounds',max:3,tier:1,d:'+6% weapon damage / rank',f:()=>P.mods.dmg+=.06},
+  {id:'eye',n:'Deadeye',max:3,tier:1,d:'+4% crit chance / rank',f:()=>P.mods.crit+=.04},
+  {id:'demo',n:'Demolitions',max:2,tier:2,d:'GRENADE & SPRAY damage +30% / rank'},
+  {id:'brutal',n:'Brutality',max:2,tier:2,d:'+0.25 crit multiplier / rank',f:()=>P.mods.cx+=.25},
+  {id:'dtap',n:'Double Tap',max:1,tier:3,d:'20% chance any shot fires twice'},
+  {id:'exec',n:'Executioner',max:1,tier:3,d:'Enemies below 25% HP take double damage'},
+ ]},
+ {br:'SURVIVAL',nodes:[
+  {id:'cond',n:'Conditioning',max:3,tier:1,d:'+10 max HP / rank',f:()=>{P.maxhp+=10;P.hp+=10;}},
+  {id:'evade',n:'Evasion',max:2,tier:1,d:'+4% dodge / rank',f:()=>P.mods.dodge+=.04},
+  {id:'plate',n:'Plating',max:2,tier:2,d:'+1 armor / rank',f:()=>P.armor+=1},
+  {id:'ghost',n:'Ghost Protocol',max:2,tier:2,d:'CAMOUFLAGE lasts +1 round / rank'},
+  {id:'medic2',n:'Stim Circuit',max:2,tier:2,d:'Healing skills heal +8 / rank'},
+  {id:'heart',n:'Second Heart',max:1,tier:3,d:'Once per combat, survive a lethal hit at 1 HP'},
+ ]},
+ {br:'TACTICS',nodes:[
+  {id:'scav',n:'Scavenger',max:2,tier:1,d:'+20% gold from combat / rank',f:()=>P.mods.gold+=.2},
+  {id:'mags',n:'Deep Pockets',max:2,tier:1,d:'+1 round in every mag / rank',f:()=>P.mods.mag+=1},
+  {id:'cool',n:'Drill Sergeant',max:2,tier:2,d:'Skill cooldowns −1 / rank (min 1)'},
+  {id:'sig',n:'Specialist',max:2,tier:2,d:''},
+  {id:'apx',n:'Overdrive',max:1,tier:3,d:'+1 max AP every combat turn'},
+ ]},
+];
+const SIG_DESC={marksman:'AIM grants +10% more crit per stack / rank',mechanic:'Turrets +3 damage and +1 round / rank',assault:'ADRENALINE grants +1 more AP / rank',medic:'TRIAGE heals +6 more / rank'};
+const SPEC_BRANCH={
+ marksman:{req:'mkpack',br:'SPEC OPS — MARKSMAN',nodes:[
+  {id:'qh',n:'Quick Holster',max:2,tier:1,d:'1-AP weapons deal +20% damage / rank'},
+  {id:'kap',n:'Adrenal Focus',max:1,tier:1,d:'+1 AP the first time you kill each turn'},
+  {id:'steady',n:'Steady Hands',max:1,tier:2,d:'AIM also grants +15% damage per stack'},
+ ]},
+ mechanic:{req:'mcpack',br:'SPEC OPS — MECHANIC',nodes:[
+  {id:'snet',n:'Sentry Network',max:1,tier:1,d:'Max 3 active turrets',f:()=>P.mods.tmax=3},
+  {id:'tchip',n:'Targeting Chip',max:1,tier:1,d:'Turrets can crit (25%, ×2)'},
+  {id:'rdep',n:'Rapid Deploy',max:1,tier:2,d:'TURRET costs 1 AP'},
+ ]},
+ assault:{req:'aspack',br:'SPEC OPS — ASSAULT',nodes:[
+  {id:'ks',n:'Killstreak',max:1,tier:1,d:'Each kill grants +10% damage for the rest of combat'},
+  {id:'jugg',n:'Juggernaut Rig',max:2,tier:1,d:'+1 armor / rank',f:()=>P.armor+=1},
+  {id:'pman',n:'Point Man',max:1,tier:2,d:'Your first attack each combat deals double damage'},
+ ]},
+};
+function classTree(){const t=[...TREE];const s=SPEC_BRANCH[P.cls];if(s&&has(s.req))t.push(s);return t;}
+/* ------ PERKS — small post-fight upgrades (Field Requisition) ------ */
+const PERKS=[
+  {n:'Hardened',d:'+8 max HP',f:()=>{P.maxhp+=8;P.hp+=8;}},
+  {n:'Hot Loads',d:'+4% weapon damage',f:()=>P.mods.dmg+=.04},
+  {n:'Zeroed Optics',d:'+3% crit chance',f:()=>P.mods.crit+=.03},
+  {n:'Light Step',d:'+3% dodge',f:()=>P.mods.dodge+=.03},
+  {n:'Cruel Precision',d:'+0.2 crit multiplier',f:()=>P.mods.cx+=.2},
+  {n:'Spare Mags',d:'+1 round in every mag',f:()=>P.mods.mag+=1},
+  {n:'War Chest',d:'+25 gold',f:()=>P.gold+=25},
+  {n:'Patch Kit',d:'Heal 30% max HP now',f:()=>heal(Math.round(P.maxhp*.3))},
+  {n:'Field Dressing',d:'Heal 15% max HP after every combat',once:'postheal',f:()=>P.flags.postheal=true},
+];
 const ENEMIES=[
   {id:'raider',name:'Raider',hp:26,dmg:[5,8],w:3},
   {id:'rusher',name:'Rusher',hp:18,dmg:[3,5],double:true,w:2},
@@ -594,13 +666,13 @@ const ARMORY=[
   {id:'hp2',n:'COMBAT STIMS II',d:'All operatives: a further +15 max HP.',cost:140,req:'hp1'},
   {id:'fieldkit',n:'FIELD KIT',d:'Start each run with a Medkit in your pack.',cost:120},
   {id:'dmg2',n:'BALLISTICS LAB II',d:'All operatives: a further +8% weapon damage.',cost:190,req:'dmg1'},
-  {id:'mkpack',n:'MARKSMAN TALENT PACK',d:'Adds 3 talents to the Marksman pool: Double Tap, Executioner, Ghillie Wrap.',cost:200},
-  {id:'mcpack',n:'MECHANIC TALENT PACK',d:'Adds 3 talents: Sentry Network, EMP Burst, Ablative Shell.',cost:200},
+  {id:'mkpack',n:'MARKSMAN TALENT PACK',d:'Adds a SPEC OPS branch to the Marksman talent tree: Quick Holster, Adrenal Focus, Steady Hands.',cost:200},
+  {id:'mcpack',n:'MECHANIC TALENT PACK',d:'Adds a SPEC OPS branch to the Mechanic talent tree: Sentry Network, Targeting Chip, Rapid Deploy.',cost:200},
   {id:'arsenal',n:'ADVANCED ARSENAL',d:'Adds heavy weapons to shops: AS50, Scrap Cannon, M60.',cost:250},
   {id:'wind',n:'SECOND WIND',d:'Once per run, survive death and recover 30% HP.',cost:280},
   {id:'medic',n:'MEDIC CLASS',d:'Unlock the Medic operative: in-combat healing, lifesteal weapons, attrition play.',cost:300},
   {id:'assault',n:'ASSAULT CLASS',d:'Unlock the Assault operative: burst weapons, adrenaline, aggression.',cost:350},
-  {id:'aspack',n:'ASSAULT TALENT PACK',d:'Adds 3 talents: Killstreak, Juggernaut Rig, Last Stand. (Requires Assault)',cost:200,req:'assault'},
+  {id:'aspack',n:'ASSAULT TALENT PACK',d:'Adds a SPEC OPS branch to the Assault talent tree: Killstreak, Juggernaut Rig, Point Man. (Requires Assault)',cost:200,req:'assault'},
 ];
 const CONSUMABLES={
   medkit:{id:'medkit',n:'Medkit',d:'Heal 30 HP',price:35},
@@ -646,8 +718,8 @@ function newRun(clsId){
   P={cls:clsId,hp:cls.hp,maxhp:cls.hp,armor:0,level:1,xp:0,xpneed:12,
      gold:30,items:[],inv:[],
      equip:{pistol:mkWeaponItem(cls.start),w1:null,w2:null,ammo:null,helmet:null,chest:null,legs:null,boots:null,special:null},
-     mods:{dmg:0,crit:0,cx:0,gold:0,dodge:0,tdmg:0,tammo:0,tmax:2,mag:0},
-     flags:{},talents:[]};
+     mods:{dmg:0,crit:0,cx:0,gold:0,dodge:0,tmax:2,mag:0},
+     skills:[SIG_SKILL[clsId]],tp:0,tree:{},perks:[],flags:{}};
   if(has('hp1')){P.maxhp+=10;P.hp+=10;}
   if(has('hp2')){P.maxhp+=15;P.hp+=15;}
   if(has('dmg1'))P.mods.dmg+=.08;
@@ -696,19 +768,19 @@ function equipItem(uid,slotOverride){
   P.inv.splice(idx,1);
   if(cur){applyGear(cur,-1);P.inv.push(cur);}
   P.equip[slot]=it;applyGear(it,1);
-  renderGear();updateHUD();
+  refreshPanel();updateHUD();
 }
 function unequipItem(slot){
   const it=P.equip[slot];if(!it)return;
   if(slot==='pistol')return; // pistol slot is locked
   if(P.inv.length>=14)return;
   applyGear(it,-1);P.equip[slot]=null;P.inv.push(it);
-  renderGear();updateHUD();
+  refreshPanel();updateHUD();
 }
 function sellItem(uid){
   const idx=P.inv.findIndex(i=>i.uid===uid);if(idx<0)return;
   P.gold+=P.inv[idx].value;P.inv.splice(idx,1);
-  renderGear();updateHUD();
+  refreshPanel();updateHUD();
 }
 
 /* =================== MAP =================== */
@@ -829,10 +901,10 @@ function startCombat(kind){
   }else{
     foes.push(scaleE(dungeon().boss,t,0)); // bosses tuned as fixed endpoints
   }
-  C={kind,foes,turrets:[],mines:0,target:0,ap:3,apmax:3,
-     aim:0,adrUsed:0,empUsed:false,fragUsed:false,firstAtk:true,
-     killedThisTurn:false,streak:0,lsUsed:false,turn:1,busy:false,
-     ammo:{},drug:false,triUsed:0};
+  const apm=3+tr('apx');
+  C={kind,foes,turrets:[],mines:0,target:0,ap:apm,apmax:apm,
+     aim:0,camo:0,cds:{},firstAtk:true,
+     killedThisTurn:false,streak:0,lsUsed:false,turn:1,busy:false,ammo:{}};
   equippedWeapons().forEach(it=>{
     const w=wstat(it);
     if(w.mag)C.ammo[it.uid]={left:w.mag,cap:w.mag};
@@ -888,11 +960,11 @@ function renderCombat(){
   // effects
   const eff=[];
   if(C.aim>0)eff.push('AIM ×'+C.aim);
+  if(C.camo>0)eff.push('CAMO '+C.camo);
   if(C.mines>0)eff.push('MINES ×'+C.mines);
   C.turrets.forEach((t,i)=>eff.push(`TURRET ${t.ammo}rnd`));
   if(P.armor>0)eff.push('ARMOR '+P.armor);
   if(C.streak>0)eff.push('STREAK +'+(C.streak*10)+'%');
-  if(C.drug)eff.push('DRUGS +25%');
   $('combat-effects').textContent=eff.join(' · ');
   // turrets in scene
   const tz=$('tr-zone');tz.innerHTML='';
@@ -911,74 +983,43 @@ function renderCombat(){
     const w=wstat(item);
     const b=document.createElement('button');b.className='actbtn';
     const a=C.ammo[item.uid];
-    const ammoTxt=w.mag?` · ${a?a.left:w.mag}/${w.mag}`:' · ∞';
-    const dmgTxt=dmgPreview(w);
-    b.innerHTML=`${wicon(w.id)}<span style="color:${rc(item)}">${w.name}</span><span class="cost">${w.ap} AP${ammoTxt}</span><span class="sub">${dmgTxt}${w.hits>1?' ×'+w.hits:''}${w.aoe?' · ALL':''} · crit ${Math.round((w.crit+P.mods.crit)*100)}%</span>`;
+    const ammoTxt=w.mag?`${a?a.left:w.mag}/${w.mag}`:'∞';
+    b.innerHTML=`${wicon(w.id)}<span class="disp" style="color:${rc(item)}">${WEAPONS[item.wid].sn||w.name}</span><span class="cost">${w.ap}AP · ${ammoTxt}</span><span class="sub">${dmgPreview(w)}${w.hits>1?' ×'+w.hits:''}${w.aoe?' · ALL':''}</span>`;
     b.disabled=busy||C.ap<w.ap||(w.mag&&(!a||a.left<=0));
     b.onclick=()=>playerAttack(item);
     ar.appendChild(b);
   });
-  // skills (compact board)
+  // skills (with cooldowns)
   const sk=$('skill-row');sk.innerHTML='';
-  const skill=(name,cost,sub,disabled,fn)=>{
-    const b=document.createElement('button');b.className='skillbtn';
-    b.innerHTML=`${name}<span class="cost">${cost}</span><span class="sub">${sub}</span>`;
-    b.disabled=disabled;b.onclick=fn;sk.appendChild(b);
-  };
-  if(P.flags.aim){
-    skill('AIM','1 AP','+25% crit'+(P.flags.steady?' +dmg':'')+' ×'+C.aim,
-      busy||C.ap<1||C.aim>=3,
-      ()=>{C.ap--;C.aim++;log('Lining up the shot. AIM ×'+C.aim,'sys');renderCombat();});
-  }
-  if(P.flags.turret){
-    const cost=P.flags.cheapturret?1:2;
-    skill('TURRET',cost+' AP',`${4+P.mods.tdmg}–${6+P.mods.tdmg}/turn ×${3+P.mods.tammo}`,
-      busy||C.ap<cost||C.turrets.length>=P.mods.tmax,
-      ()=>{C.ap-=cost;C.turrets.push({ammo:3+P.mods.tammo});log('Turret online.','sys');renderCombat();});
-  }
-  if(P.flags.mines){
-    skill('MINE','1 AP','15 to attacker',busy||C.ap<1,
-      ()=>{C.ap--;C.mines++;log('Mine armed.','sys');renderCombat();});
-  }
-  if(P.flags.emp){
-    skill('EMP','2 AP','stun all 1/cbt',busy||C.ap<2||C.empUsed,
-      ()=>{C.ap-=2;C.empUsed=true;C.foes.forEach(f=>{if(f.hp>0){f.stun=1;setIntent(f);}});log('EMP burst — all hostiles stunned.','sys');renderCombat();});
-  }
-  if(P.flags.adrenaline){
-    const maxAdr=P.flags.adr2?2:1;
-    skill('ADRENALINE','1 AP','+2 AP ('+(maxAdr-C.adrUsed)+' left)',busy||C.ap<1||C.adrUsed>=maxAdr,
-      ()=>{C.ap+=1;C.adrUsed++;log('Adrenaline. +2 AP.','sys');renderCombat();});
-  }
-  if(P.flags.frag){
-    skill('FRAG','1 AP','12 ALL 1/cbt',busy||C.ap<1||C.fragUsed,
-      ()=>{C.ap--;C.fragUsed=true;C.foes.forEach(f=>{if(f.hp>0)hitEnemy(f,12,false,'Frag');});afterPlayerAction();});
-  }
-  if(P.flags.triage){
-    const amt=12+(P.flags.fsurg?8:0);
-    skill('TRIAGE','1 AP','heal '+amt+' ('+(2-C.triUsed)+' left)',busy||C.ap<1||C.triUsed>=2||P.hp>=P.maxhp,
-      ()=>{C.ap--;C.triUsed++;heal(amt);log('Triage: +'+amt+' HP.','good');renderCombat();});
-  }
-  if(P.flags.drugs){
-    skill('DRUGS','1 AP','+25% dmg this turn',busy||C.ap<1||C.drug,
-      ()=>{C.ap--;C.drug=true;log('Combat drugs administered. +25% damage this turn.','sys');renderCombat();});
-  }
+  P.skills.forEach(id=>{
+    const s=SKILLS[id],ap=skillAP(id),cdLeft=C.cds[id]||0;
+    const b=document.createElement('button');b.className='skillbtn'+(cdLeft>0?' cd':'');
+    b.innerHTML=`${s.n}<span class="cost">${cdLeft>0?'CD '+cdLeft:ap+' AP'}</span><span class="sub">${s.sub()}</span>`;
+    b.disabled=busy||cdLeft>0||C.ap<ap||(s.can&&!s.can());
+    b.onclick=()=>useSkill(id);
+    sk.appendChild(b);
+  });
   // consumables
   P.items.forEach((it,i)=>{
     const c=CONSUMABLES[it];
-    skill(c.n,'FREE',c.d,busy,()=>useItem(i));
+    const b=document.createElement('button');b.className='skillbtn';
+    b.innerHTML=`${c.n}<span class="cost">FREE</span><span class="sub">${c.d}</span>`;
+    b.disabled=busy;b.onclick=()=>useItem(i);sk.appendChild(b);
   });
   updateHUD();
 }
-function mkBtn(name,cost,sub){
-  const b=document.createElement('button');b.className='actbtn';
-  b.innerHTML=`${name}<span class="cost">${cost}</span><span class="sub">${sub}</span>`;
-  return b;
+function useSkill(id){
+  const s=SKILLS[id],ap=skillAP(id);
+  if(!C||C.busy||C.ap<ap||(C.cds[id]||0)>0||(s.can&&!s.can()))return;
+  C.ap-=ap;
+  const cd=skillCD(id);
+  if(cd>0)C.cds[id]=cd;
+  s.use();
+  afterPlayerAction();
 }
 function dmgPreview(w){
-  let mult=1+P.mods.dmg+(C&&C.drug?.25:0);
-  if(P.flags.quick&&w.ap===1)mult+=.4;
-  if(P.flags.berserk&&P.hp<P.maxhp/2)mult+=.4;
-  mult+=C.streak*.1;
+  let mult=1+P.mods.dmg+C.streak*.1;
+  if(tr('qh')&&w.ap===1)mult+=.2*tr('qh');
   return Math.round(w.min*mult)+'–'+Math.round(w.max*mult);
 }
 function currentTarget(){
@@ -995,7 +1036,7 @@ function playerAttack(item){
   const hn=w.hits||1;
   targets.forEach(f=>{if(f)for(let k=0;k<hn;k++){if(f.hp>0)fireShot(w,f);}});
   // double tap (free repeat, no extra ammo)
-  if(P.flags.doubletap&&rf()<.25){
+  if(tr('dtap')&&rf()<.2){
     log('DOUBLE TAP!','crit');
     targets.forEach(f=>{if(f&&f.hp>0)fireShot(w,f);});
   }
@@ -1006,21 +1047,20 @@ function fireShot(w,f){
   muzzleFire();
   // dodge
   if(f.dodge&&rf()<f.dodge){log(f.name+' evades!','dmg');floatAt(enemyCard(f),'MISS','miss');return;}
-  let mult=1+P.mods.dmg+C.streak*.1+(C.drug?.25:0);
-  if(P.flags.quick&&w.ap===1)mult+=.4;
-  if(P.flags.berserk&&P.hp<P.maxhp/2)mult+=.4;
-  if(P.flags.pointman&&C.firstAtk){mult*=2;log('POINT MAN — double damage!','crit');}
+  let mult=1+P.mods.dmg+C.streak*.1;
+  if(tr('qh')&&w.ap===1)mult+=.2*tr('qh');
+  if(tr('pman')&&C.firstAtk){mult*=2;log('POINT MAN — double damage!','crit');}
   let critC=w.crit+P.mods.crit, cx=w.cx+P.mods.cx;
-  if(C.aim>0){critC+=.25*C.aim;cx+=.3*C.aim;if(P.flags.steady)mult+=.2*C.aim;}
+  if(C.aim>0){critC+=(.25+.1*sigR('marksman'))*C.aim;cx+=.3*C.aim;if(tr('steady'))mult+=.15*C.aim;}
   let dmg=ri(w.min,w.max)*mult;
   const crit=rf()<critC;
   if(crit)dmg*=cx;
-  if(P.flags.exec&&f.hp<f.max*.25)dmg*=2;
+  if(tr('exec')&&f.hp<f.max*.25)dmg*=2;
   dmg=Math.max(1,Math.round(dmg)-f.armor);
   C.firstAtk=false;
   hitEnemy(f,dmg,crit,w.name);
   if(w.ls)heal(w.ls);
-  if((P.flags.suppress||w.supp)&&f.hp>0)f.suppress=1;
+  if(w.supp&&f.hp>0)f.suppress=1;
 }
 function hitEnemy(f,dmg,crit,src){
   f.hp-=dmg;
@@ -1035,9 +1075,8 @@ function onKill(f){
   RUN.kills++;META.kills++;
   const xp=C.kind==='boss'?60:C.kind==='elite'?25:8+RUN.tier*4;
   gainXP(xp);
-  if(P.flags.bloodlust){heal(5);}
-  if(P.flags.killstreak)C.streak++;
-  if(P.flags.killap&&!C.killedThisTurn){C.ap++;C.killedThisTurn=true;log('Adrenal focus: +1 AP','sys');}
+  if(tr('ks'))C.streak++;
+  if(tr('kap')&&!C.killedThisTurn){C.ap++;C.killedThisTurn=true;log('Adrenal focus: +1 AP','sys');}
 }
 function afterPlayerAction(){
   renderCombat();
@@ -1048,7 +1087,6 @@ function useItem(i){
   if(it==='medkit'){heal(30);log('Medkit used. +30 HP','good');}
   else if(it==='grenade'){C.foes.forEach(f=>{if(f.hp>0)hitEnemy(f,10,false,'Grenade');});}
   else if(it==='stim'){C.ap+=2;log('Stim shot. +2 AP','sys');}
-  if(P.flags.stimrush){C.ap+=1;log('Stim rush: +1 AP','sys');}
   P.items.splice(i,1);
   afterPlayerAction();
 }
@@ -1060,9 +1098,9 @@ $('btn-endturn').onclick=async()=>{
     if(!C)return;
     const f=C.foes.find(x=>x.hp>0);
     if(f&&t.ammo>0){
-      let d=ri(4,6)+P.mods.tdmg;
+      let d=ri(4,6)+turretDmg();
       let crit=false;
-      if(P.flags.tcrit&&rf()<.25){d*=2;crit=true;}
+      if(tr('tchip')&&rf()<.25){d*=2;crit=true;}
       d=Math.max(1,d-f.armor);
       t.ammo--;t._fx=true;
       hitEnemy(f,d,crit,'Turret');
@@ -1099,6 +1137,7 @@ $('btn-endturn').onclick=async()=>{
         C.mines--;hitEnemy(f,15,false,'Mine');renderCombat();await sleep(320);
         if(!C||f.hp<=0)break;
       }
+      if(C.camo>0){log('Camouflaged — '+f.name+' fires blind and misses.','good');floatAt($('player-avatar'),'HIDDEN','miss');continue;}
       let d=ri(i.d[0],i.d[1]);
       if(f.suppress>0){d=Math.round(d*.75);}
       if(f.enrage&&f.hp<f.max/2)d=Math.round(d*1.4);
@@ -1114,8 +1153,10 @@ $('btn-endturn').onclick=async()=>{
   if(!C||P.hp<=0)return;
   // new turn
   C.turn++;
-  C.ap=C.apmax;C.killedThisTurn=false;C.busy=false;C.drug=false;C.foes.forEach(f=>{if(f.hp>0)setIntent(f);});
-  if(P.flags.repair)heal(4);
+  C.ap=C.apmax;C.killedThisTurn=false;C.busy=false;
+  if(C.camo>0)C.camo--;
+  for(const k in C.cds)if(C.cds[k]>0)C.cds[k]--;
+  C.foes.forEach(f=>{if(f.hp>0)setIntent(f);});
   renderCombat();
 };
 function damagePlayer(d,src){
@@ -1126,7 +1167,7 @@ function damagePlayer(d,src){
   shakeScreen();
   log(`${src} hits you for <b>${d}</b>`,'dmg');
   if(P.hp<=0){
-    if(P.flags.laststand&&!C.lsUsed){C.lsUsed=true;P.hp=1;log('LAST STAND — you refuse to die.','crit');updateHUD();return;}
+    if(C&&tr('heart')&&!C.lsUsed){C.lsUsed=true;P.hp=1;log('SECOND HEART — you refuse to die.','crit');updateHUD();return;}
     if(P.flags.secondwind){P.flags.secondwind=false;P.hp=Math.round(P.maxhp*.3);log('SECOND WIND — back on your feet at '+P.hp+' HP.','crit');updateHUD();return;}
     gameOver();return;
   }
@@ -1171,58 +1212,54 @@ function winCombat(){
     if(RUN.tier+1>META.bestTier){META.bestTier=RUN.tier+1;saveMeta();}
     showVictory();
   }else{
+    renderOffer(buildOffer(kind));
     $('modal-reward').classList.remove('hidden');
   }
   updateHUD();
 }
-$('btn-rw-ok').onclick=()=>{
-  $('modal-reward').classList.add('hidden');
-  processLevelQueue(()=>{showScreen('map');renderMap();});
-};
-
-/* =================== XP / LEVEL =================== */
-let levelQueue=0;
-function xpNeedFor(l){return l<=1?12:l===2?18:l===3?26:l===4?36:16+l*15;}
-function gainXP(n){
-  P.xp+=n;
-  while(P.xp>=P.xpneed){P.xp-=P.xpneed;P.level++;P.xpneed=xpNeedFor(P.level);levelQueue++;}
-  updateHUD();
+/* Field Requisition — pick one small upgrade or new skill after each non-boss fight */
+function buildOffer(kind){
+  const pool=GENERIC_SKILLS.filter(s=>!P.skills.includes(s));
+  const cards=[];
+  if(pool.length&&(kind==='elite'||rf()<.6))cards.push({type:'skill',id:pick(pool)});
+  const perkPool=shuffle(PERKS.filter(p=>!p.once||!P.flags[p.once]));
+  while(cards.length<3&&perkPool.length)cards.push({type:'perk',p:perkPool.pop()});
+  return shuffle(cards);
 }
-function processLevelQueue(done){
-  if(levelQueue<=0){done();return;}
-  levelQueue--;
-  heal(Math.round(P.maxhp*.25));
-  const pool=talentPool();
-  let opts=shuffle(pool).slice(0,3);
-  const sig=pool.find(t=>t.sig);
-  if(sig&&!opts.some(t=>t.sig)){opts[0]=sig;opts=shuffle(opts);}
-  $('lu-level').textContent=P.level-levelQueue;
-  const el=$('lu-opts');el.innerHTML='';
-  if(opts.length===0){
-    // out of talents — give stats
-    P.maxhp+=15;P.hp+=15;
-    $('modal-levelup').classList.add('hidden');
-    processLevelQueue(done);return;
-  }
-  opts.forEach(t=>{
+function renderOffer(offer){
+  const el=$('rw-offer');
+  el.innerHTML=`<hr><div class="eyebrow">// FIELD REQUISITION — CHOOSE ONE</div>`;
+  offer.forEach(c=>{
     const b=document.createElement('button');b.className='choice';
-    b.innerHTML=`<b>${t.n}</b><br><span class="small">${t.d}</span>`;
+    if(c.type==='skill')b.innerHTML=`<b>⚡ NEW SKILL: ${SKILLS[c.id].n}</b><br><span class="small">${SKILLS[c.id].desc}</span>`;
+    else b.innerHTML=`<b>${c.p.n}</b><br><span class="small">${c.p.d}</span>`;
     b.onclick=()=>{
-      t.f(P);P.talents.push(t.id);
-      $('modal-levelup').classList.add('hidden');
+      if(c.type==='skill')P.skills.push(c.id);
+      else{c.p.f();P.perks.push(c.p.n);}
+      el.innerHTML=`<hr><div class="small" style="color:var(--green)">✓ ${c.type==='skill'?'Skill acquired: '+SKILLS[c.id].n:c.p.n}</div>`;
       updateHUD();
-      processLevelQueue(done);
     };
     el.appendChild(b);
   });
-  $('modal-levelup').classList.remove('hidden');
 }
-function talentPool(){
-  let pool=[...TALENTS[P.cls]];
-  const packMap={marksman:'mkpack',mechanic:'mcpack',assault:'aspack'};
-  const packId=packMap[P.cls];
-  if(packId&&has(packId)&&TALENTS[P.cls+'Adv'])pool=pool.concat(TALENTS[P.cls+'Adv']);
-  return pool.filter(t=>!P.talents.includes(t.id));
+$('btn-rw-ok').onclick=()=>{
+  $('modal-reward').classList.add('hidden');
+  $('rw-offer').innerHTML='';
+  showScreen('map');renderMap();
+};
+
+/* =================== XP / LEVEL =================== */
+function xpNeedFor(l){return l<=1?12:l===2?18:l===3?26:l===4?36:16+l*15;}
+function gainXP(n){
+  P.xp+=n;
+  while(P.xp>=P.xpneed){
+    P.xp-=P.xpneed;P.level++;P.xpneed=xpNeedFor(P.level);
+    P.tp++;
+    heal(Math.round(P.maxhp*.25));
+    log('LEVEL '+P.level+' — +1 talent point. Spend it in TALENTS below.','crit');
+    floatAt($('player-avatar')||$('hud-lv'),'LEVEL UP','crit');
+  }
+  updateHUD();
 }
 
 /* =================== SHOP =================== */
@@ -1373,7 +1410,7 @@ function showVictory(){
     b.onclick=()=>{
       RUN.tier++;RUN.dungeon=d.id;RUN.map=genMap();RUN.pos=null;
       heal(Math.round(P.maxhp*.4));
-      processLevelQueue(()=>{showScreen('map');renderMap();});
+      showScreen('map');renderMap();
     };
     el.appendChild(b);
   });
@@ -1441,44 +1478,60 @@ function itemDesc(it){
   }
   return `<span style="color:${rc(it)}">${rn(it)}</span> · ${statText(it.stats)}`;
 }
-function talentName(id){
-  for(const k in TALENTS){const t=TALENTS[k].find(x=>x.id===id);if(t)return t;}
-  return null;
+/* =================== BOTTOM NAV / PANELS =================== */
+let curPanel=null;
+const PANELS={char:renderPanelChar,inv:renderPanelInv,tree:renderPanelTree};
+document.querySelectorAll('#bottom-nav button').forEach(b=>b.onclick=()=>openPanel(b.dataset.p));
+function openPanel(p){curPanel=p;PANELS[p]();$('modal-panel').classList.remove('hidden');}
+function refreshPanel(){if(curPanel&&!$('modal-panel').classList.contains('hidden'))PANELS[curPanel]();}
+$('btn-panel-close').onclick=()=>{$('modal-panel').classList.add('hidden');curPanel=null;};
+
+function renderPanelChar(){
+  $('panel-body').innerHTML=`<div class="eyebrow">// OPERATIVE</div>
+  <div style="display:flex;gap:12px;align-items:center;margin:6px 0 10px">
+    <div style="flex:none">${buildAvatar()}</div>
+    <div class="small" style="line-height:1.7;flex:1">
+      <b class="${CLASSES[P.cls].acc}">${CLASSES[P.cls].name.toUpperCase()}</b> — Level ${P.level} (${P.xp}/${P.xpneed} XP)<br>
+      HP <b>${P.hp}/${P.maxhp}</b> · Armor <b>${P.armor}</b> · Dodge <b>${Math.round(P.mods.dodge*100)}%</b><br>
+      Damage <b>+${Math.round(P.mods.dmg*100)}%</b> · Crit <b>+${Math.round(P.mods.crit*100)}%</b> · Crit mult <b>+${P.mods.cx.toFixed(1)}</b><br>
+      Gold bonus <b>+${Math.round(P.mods.gold*100)}%</b> · Consumables <b>${P.items.length}</b>
+    </div>
+  </div>
+  <div class="eyebrow">// SKILLS</div>
+  <div class="small" style="margin-bottom:10px">${P.skills.map(id=>`<div style="margin-bottom:3px"><b style="color:var(--amber2)">${SKILLS[id].n}</b> — ${SKILLS[id].desc}</div>`).join('')}</div>
+  <div class="eyebrow">// FIELD UPGRADES</div>
+  <div class="small">${P.perks.length?P.perks.join(' · '):'None yet — offered after fights.'}</div>`;
 }
-function renderGear(){
-  // stats
-  const cs=$('char-stats');
-  cs.innerHTML=`<b class="${CLASSES[P.cls].acc}">${CLASSES[P.cls].name.toUpperCase()}</b> — Level ${P.level} <span class="small">(${P.xp}/${P.xpneed} XP)</span><br>
-    HP <b>${P.hp}/${P.maxhp}</b> · Armor <b>${P.armor}</b> · Dodge <b>${Math.round(P.mods.dodge*100)}%</b><br>
-    Damage bonus <b>+${Math.round(P.mods.dmg*100)}%</b> · Crit bonus <b>+${Math.round(P.mods.crit*100)}%</b> · Crit mult bonus <b>+${P.mods.cx.toFixed(1)}</b><br>
-    Gold bonus <b>+${Math.round(P.mods.gold*100)}%</b> · Consumables <b>${P.items.length}</b>`;
-  // talents
-  const ct=$('char-talents');
-  ct.innerHTML=P.talents.length
-    ?P.talents.map(id=>{const t=talentName(id);return t?`<div style="margin-bottom:3px"><b style="color:var(--amber2)">${t.n}</b> — ${t.d}</div>`:'';}).join('')
-    :'None yet. Level up to choose talents.';
-  const eg=$('equip-grid');eg.innerHTML='';
+function renderPanelInv(){
+  const el=$('panel-body');
+  const lock=!!C;
+  el.innerHTML=`<div class="eyebrow">// LOADOUT</div>`+
+    (lock?`<div class="small" style="color:var(--red);margin-bottom:6px">In combat — loadout locked until the fight ends.</div>`:'');
   SLOTS.forEach(([slot,label])=>{
     const it=P.equip[slot];
     const d=document.createElement('div');d.className='slotrow';
-    const canUneq=it&&slot!=='pistol'&&P.inv.length<14;
+    const canUneq=!lock&&it&&slot!=='pistol'&&P.inv.length<14;
     d.innerHTML=`<div class="sl">${label}</div>
       <div class="it">${it?`${itemIcon(it)}<b style="color:${rc(it)}">${it.name}</b><span class="small">${itemDesc(it)}</span>`:'<span class="small">— empty —</span>'}</div>
-      ${it&&slot!=='pistol'?`<button ${canUneq?'':'disabled'}>UNEQUIP</button>`:''}`;
+      ${it&&slot!=='pistol'&&!lock?`<button ${canUneq?'':'disabled'}>UNEQUIP</button>`:''}`;
     const ub=d.querySelector('button');
     if(ub)ub.onclick=()=>unequipItem(slot);
-    eg.appendChild(d);
+    el.appendChild(d);
   });
-  $('inv-count').textContent=`(${P.inv.length}/14)`;
-  const il=$('inv-list');il.innerHTML='';
-  if(!P.inv.length)il.innerHTML='<div class="small" style="margin-bottom:10px">Nothing in the bag. Gear drops from fights and elites, or buy it from suppliers.</div>';
+  const hdr=document.createElement('div');hdr.className='eyebrow';hdr.style.marginTop='12px';
+  hdr.textContent=`// INVENTORY (${P.inv.length}/14)`;el.appendChild(hdr);
+  if(!P.inv.length){
+    const d=document.createElement('div');d.className='small';d.style.marginBottom='10px';
+    d.textContent='Nothing in the bag. Gear drops from fights and elites, or buy it from suppliers.';
+    el.appendChild(d);
+  }
   P.inv.forEach(it=>{
     const d=document.createElement('div');d.className='invrow';
-    const eq=it.kind==='weapon'
+    const eq=lock?'':(it.kind==='weapon'
       ?(isPistol(it)?`<button data-a="pistol">→PSTL</button>`:`<button data-a="w1">→W1</button><button data-a="w2">→W2</button>`)
-      :`<button data-a="eq">EQUIP</button>`;
+      :`<button data-a="eq">EQUIP</button>`);
     d.innerHTML=`<div class="it">${itemIcon(it)}<b style="color:${rc(it)}">${it.name}</b><span class="small" style="display:block">${itemDesc(it)}</span></div>
-      ${eq}<button data-a="sell" class="danger">SELL ${it.value}g</button>`;
+      ${eq}${lock?'':`<button data-a="sell" class="danger">SELL ${it.value}g</button>`}`;
     d.querySelectorAll('button').forEach(b=>{
       b.onclick=()=>{
         const a=b.dataset.a;
@@ -1487,11 +1540,45 @@ function renderGear(){
         else equipItem(it.uid,a); // 'w1' | 'w2' | 'pistol'
       };
     });
-    il.appendChild(d);
+    el.appendChild(d);
   });
 }
-$('btn-gear').onclick=()=>{renderGear();showScreen('gear');};
-$('btn-gear-back').onclick=()=>{showScreen('map');renderMap();};
+function renderPanelTree(){
+  const el=$('panel-body');
+  el.innerHTML=`<div class="eyebrow">// TALENT TREE — <b style="color:var(--amber)">${P.tp}</b> point${P.tp===1?'':'s'} available</div>
+  <div class="small" style="margin-bottom:8px">Level up to earn points. Deeper rows unlock as you spend in a branch.</div>`;
+  classTree().forEach(br=>{
+    const spent=br.nodes.reduce((a,n)=>a+tr(n.id),0);
+    const h=document.createElement('div');h.className='eyebrow';h.style.marginTop='10px';
+    h.textContent=`${br.br} — ${spent} spent`;el.appendChild(h);
+    br.nodes.forEach(n=>{
+      const r=tr(n.id),need=(n.tier-1)*2,locked=spent<need;
+      const can=!locked&&P.tp>0&&r<n.max;
+      const desc=n.id==='sig'?SIG_DESC[P.cls]:n.d;
+      const d=document.createElement('div');d.className='tnode'+(locked?' locked':'');
+      d.innerHTML=`<div style="flex:1"><b style="${r>0?'color:var(--amber2)':''}">${n.n}</b> <span class="trank">${'◆'.repeat(r)}${'◇'.repeat(n.max-r)}</span>
+        <span class="small" style="display:block">${desc}${locked?` — needs ${need} pts in this branch`:''}</span></div>
+        <button ${can?'':'disabled'}>${r>=n.max?'MAX':'+1'}</button>`;
+      d.querySelector('button').onclick=()=>buyNode(n.id);
+      el.appendChild(d);
+    });
+  });
+}
+function buyNode(id){
+  const branches=classTree();
+  for(const br of branches){
+    const n=br.nodes.find(x=>x.id===id);
+    if(!n)continue;
+    const spent=br.nodes.reduce((a,x)=>a+tr(x.id),0);
+    const r=tr(id);
+    if(P.tp<=0||r>=n.max||spent<(n.tier-1)*2)return;
+    P.tp--;P.tree[id]=r+1;
+    if(n.f)n.f();
+    renderPanelTree();updateHUD();
+    if(C&&!C.busy)renderCombat();
+    return;
+  }
+}
 
 /* =================== CODEX =================== */
 let codexTab='weapons';
@@ -1518,8 +1605,8 @@ function renderCodex(){
       const know=found.includes('w:'+w.id);
       const d=document.createElement('div');d.className='invrow'+(know?'':' sold');
       d.innerHTML=know
-        ?`<div class="it">${wicon(w.id)}<b>${w.name}</b> <span class="tag">${w.cls}</span><span class="small" style="display:block">${w.min}–${w.max} · ${w.ap} AP${w.mag?' · mag '+w.mag:' · ∞'} · crit ${Math.round(w.crit*100)}%${w.aoe?' · ALL':''}${w.hits>1?' · ×'+w.hits:''} — ${w.desc}</span></div>`
-        :`<div class="it"><span class="wicon" style="opacity:.4">${WICONS[WICON_MAP[w.id]]||WICONS.pistol}</span><b style="color:var(--dim)">???</b><span class="small" style="display:block">Undiscovered ${w.cls} weapon</span></div>`;
+        ?`<div class="it">${wart(w.id)}<b>${w.name}</b> <span class="tag">${w.cls}</span><span class="small" style="display:block">${w.min}–${w.max} · ${w.ap} AP${w.mag?' · mag '+w.mag:' · ∞'} · crit ${Math.round(w.crit*100)}%${w.aoe?' · ALL':''}${w.hits>1?' · ×'+w.hits:''} — ${w.desc}</span></div>`
+        :`<div class="it"><span class="wart" style="opacity:.35;color:var(--dim)">${WART[w.id]||''}</span><b style="color:var(--dim)">???</b><span class="small" style="display:block">Undiscovered ${w.cls} weapon</span></div>`;
       el.appendChild(d);
     });
   }else{
@@ -1549,10 +1636,15 @@ function updateHUD(){
   $('hud-lv').textContent=P.level;
   $('hud-gold').textContent=P.gold;
   $('hud-scrap').textContent=META.scrap;
+  $('tp-badge').textContent=P.tp>0?'●'+P.tp:'';
 }
-const SCREENS=['menu','armory','map','combat','shop','trainer','event','gameover','victory','gear','codex'];
+const SCREENS=['menu','armory','map','combat','shop','trainer','event','gameover','victory','codex'];
 function showScreen(s){
   SCREENS.forEach(x=>$('screen-'+x).classList.toggle('hidden',x!==s));
+  const nav=!!P&&(s==='map'||s==='combat');
+  $('bottom-nav').classList.toggle('hidden',!nav);
+  document.body.classList.toggle('hasnav',nav);
+  if(!nav){$('modal-panel').classList.add('hidden');curPanel=null;}
   window.scrollTo(0,0);
 }
 

@@ -6,21 +6,24 @@ Single-file browser roguelike (`index.html`, ~1,600 lines: vanilla JS + CSS + in
 Modern-military turn-based roguelike. Slay-the-Spire map structure, XCOM flavor. Replayability comes from: (1) branching dungeon paths, (2) build variety via classes/talents/gear, (3) permanent meta-progression (scrap → Armory unlocks). Depth over volume — a tight loop people replay, not sprawling content.
 
 ## Core systems (do not break these invariants)
-- **Classes:** Marksman (crit), Mechanic (turrets/area control), Assault (burst/aggression, Armory unlock), Medic (sustain/lifesteal, Armory unlock). Each starts with ONLY its unique infinite-ammo pistol; class signature skill (AIM / TURRET / ADRENALINE / TRIAGE) is guaranteed to appear in the first level-up offer.
+- **Classes:** Marksman (crit), Mechanic (turrets/area control), Assault (burst/aggression, Armory unlock), Medic (sustain/lifesteal, Armory unlock). Each starts with ONLY its unique infinite-ammo pistol plus its signature skill (AIM / TURRET / ADRENALINE / TRIAGE) already active.
+- **Skills:** active abilities in `SKILLS` with AP costs and per-combat cooldowns (`C.cds`, tick down each turn). Generic skills (Grenade, Spray, Flashbang, Camo, Field Patch, Mine) are drafted via post-fight Field Requisition offers — never granted automatically. Skill damage/healing scales with `RUN.tier` and is amplified by talent-tree nodes.
+- **Progression split:** after each non-boss fight the reward modal offers ONE pick of 3 cards (new skill or small perk, `buildOffer`); level-ups grant 1 talent point (`P.tp`) spent in the talent tree (`TREE`, 3 branches + class SPEC OPS branch from Armory packs). Deeper tree rows need 2 points/tier spent in that branch. Tree ranks live in `P.tree`, read via `tr(id)`.
+- **Bottom nav:** CHARACTER / INVENTORY / TALENTS panels available on map AND in combat (overlay, `openPanel`). Loadout is LOCKED during combat — `C.ammo` is keyed by item uid at combat start, so equipping mid-fight would break mags.
 - **Ammo:** pistols infinite; all other weapons have per-combat mags (`mag` field). This is a core tension — never give non-pistol weapons infinite ammo.
 - **Equipment slots:** pistol (LOCKED — only pistol-type weapons), w1, w2, ammo, helmet, chest, legs, boots, special. Gear grants base stats via `applyGear(item, ±1)` (symmetric on equip/unequip — keep it symmetric).
 - **Rarity:** grey/green/blue/purple/orange (`RARITIES`), multiplies gear stats (`sm`) and weapon dmg (`wm`). Elites drop green+, bosses blue+.
 - **XP per kill** (never per damage dealt — exploitable). Fast early levels: 12/18/26/36 then `16+15·level`.
-- **Two in-run currencies:** gold (shop items, trainer stats, gunsmith mods) vs talents (level-up picks). Keep these decision spaces separate.
+- **Two in-run currencies:** gold (shop items, trainer stats, gunsmith mods) vs talent points (tree ranks). Keep these decision spaces separate.
 - **Scrap** is meta currency, banked instantly (survives death), spent in Armory. Meta unlocks favor VARIETY (classes, talent packs, weapons) with only light stat pads — avoid the Rogue Legacy trap of balancing around meta stats.
 - **Map:** 18 layers, `genMap()`; elites only layer ≥6; SVG connector lines between layers; first dungeon always Rust Yards, then choose between the other two at tier+1 after each boss.
 - **Enemy scaling:** by dungeon tier AND map depth (`scaleE(base, tier, layer)`); bosses exempt from depth scaling (fixed endpoints).
 - **Persistence:** dual-mode in `loadMeta/saveMeta` — `window.storage` (Claude artifact) → `localStorage` (standalone/GitHub Pages) → memory. Key `blacksite-meta`. META holds scrap, unlocks, runs, bestTier, kills, found (codex discovery).
 
 ## Code conventions
-- Everything in `index.html`. Data tables at top of script (WEAPONS, GEART, RARITIES, CLASSES, TALENTS, ENEMIES, ELITES, DUNGEONS, ARMORY, CONSUMABLES).
+- Everything in `index.html`. Data tables at top of script (WEAPONS, GEART, RARITIES, CLASSES, SKILLS, TREE/SPEC_BRANCH, PERKS, ENEMIES, ELITES, DUNGEONS, ARMORY, CONSUMABLES).
 - `wstat(item)` resolves weapon stats (base × rarity × gunsmith mods + P.mods.mag) — always attack via items, not raw WEAPONS entries.
-- All sprites are inline SVG (`SPRITES`, `buildAvatar()` paper-doll that reflects equipped gear, `TURRET_SVG`, `WICONS`/`GICONS`). High contrast against the dark scene — an earlier turret was invisible because it was drawn in near-background colors.
+- All sprites are inline SVG (`SPRITES`, `buildAvatar()` paper-doll that reflects equipped gear, `TURRET_SVG`, `WICONS`/`GICONS` small icons, `WART` detailed per-weapon side profiles tinted by rarity via currentColor). High contrast against the dark scene — an earlier turret was invisible because it was drawn in near-background colors.
 - Combat FX: `floatAt` damage numbers, `retrig(el, cls)` for animations, `_fx`/`_lunge` flags replayed after `renderCombat()` rebuilds DOM. Enemy turn is async/sequenced (`C.busy` locks input).
 - Mobile-first: owner plays on iPhone. Big touch targets, portrait layout, battle scene top / actions bottom.
 
