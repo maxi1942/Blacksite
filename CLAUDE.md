@@ -7,7 +7,7 @@ Modern-military turn-based roguelike. Slay-the-Spire map structure, XCOM flavor.
 
 ## Core systems (do not break these invariants)
 - **Classes:** Marksman (crit), Mechanic (turrets/area control), Assault (burst/aggression, Armory unlock), Medic (sustain/lifesteal, Armory unlock). Each starts with ONLY its unique infinite-ammo pistol plus its signature skill (AIM / TURRET / ADRENALINE / TRIAGE) already active.
-- **Skills:** active abilities in `SKILLS` with AP costs and per-combat cooldowns (`C.cds`, tick down each turn). Generic skills (Grenade, Spray, Flashbang, Camo, Field Patch, Mine) are drafted via post-fight Field Requisition offers — never granted automatically. Skill damage/healing scales with `RUN.tier` and is amplified by talent-tree nodes.
+- **Skills:** active abilities in `SKILLS` with AP costs and cooldowns that PERSIST ACROSS FIGHTS (`P.cds`, tick down only during combat turns — deliberate anti-spam design, don't reset them per combat). Generic skills (Grenade, Spray, Flashbang, Camo, Field Patch, Mine) are drafted via post-fight Field Requisition offers — never granted automatically. Skill damage/healing scales with `RUN.tier` and is amplified by talent-tree nodes. Crowd control is capped: elites/bosses have `big=true` and are only dazed by Flashbang (next attack −50%), never fully stunned.
 - **Progression split:** after each non-boss fight the reward modal offers ONE pick of 3 cards (new skill or small perk, `buildOffer`); level-ups grant 1 talent point (`P.tp`) spent in the talent tree (`TREE`, 3 branches + class SPEC OPS branch from Armory packs). Deeper tree rows need 2 points/tier spent in that branch. Tree ranks live in `P.tree`, read via `tr(id)`.
 - **Bottom nav:** CHARACTER / INVENTORY / TALENTS panels available on map AND in combat (overlay, `openPanel`). Loadout is LOCKED during combat — `C.ammo` is keyed by item uid at combat start, so equipping mid-fight would break mags.
 - **Ammo:** pistols infinite; all other weapons have per-combat mags (`mag` field). This is a core tension — never give non-pistol weapons infinite ammo.
@@ -23,12 +23,12 @@ Modern-military turn-based roguelike. Slay-the-Spire map structure, XCOM flavor.
 ## Code conventions
 - Everything in `index.html`. Data tables at top of script (WEAPONS, GEART, RARITIES, CLASSES, SKILLS, TREE/SPEC_BRANCH, PERKS, ENEMIES, ELITES, DUNGEONS, ARMORY, CONSUMABLES).
 - `wstat(item)` resolves weapon stats (base × rarity × gunsmith mods + P.mods.mag) — always attack via items, not raw WEAPONS entries.
-- All sprites are inline SVG (`SPRITES`, `buildAvatar()` paper-doll that reflects equipped gear, `TURRET_SVG`, `WICONS`/`GICONS` small icons, `WART` detailed per-weapon side profiles tinted by rarity via currentColor). High contrast against the dark scene — an earlier turret was invisible because it was drawn in near-background colors.
+- All sprites are inline SVG (`SPRITES`, `buildAvatar()` paper-doll that reflects equipped gear, `TURRET_SVG`, `WICONS`/`GICONS` small icons, `WART` detailed per-weapon side profiles tinted by rarity via currentColor, `DUNGEON_BG` per-dungeon battle backdrops set in `startCombat`). High contrast against the dark scene — an earlier turret was invisible because it was drawn in near-background colors. Backdrops must stay near-black silhouettes so figures read on top.
 - Combat FX: `floatAt` damage numbers, `retrig(el, cls)` for animations, `_fx`/`_lunge` flags replayed after `renderCombat()` rebuilds DOM. Enemy turn is async/sequenced (`C.busy` locks input).
 - Mobile-first: owner plays on iPhone. Big touch targets, portrait layout, battle scene top / actions bottom.
 
 ## Balance philosophy (hard-won through playtests)
-Owner repeatedly found the player too strong. Enemies should take 3–4 turns to kill early. When adding power sources, compensate elsewhere. Known watch items: Mechanic historically stronger than Marksman (turrets = free damage); boss difficulty after the 18-layer extension is unvalidated.
+Owner repeatedly found the player too strong. Enemies should take 3–4 turns to kill early. When adding power sources, compensate elsewhere. Camo+Flashbang chaining felt too safe and was nerfed three ways at once (2 AP each, cross-fight cooldowns, elite/boss stun immunity) — revisit if they now feel dead. Known watch items: Mechanic historically stronger than Marksman (turrets = free damage); boss difficulty after the 18-layer extension is unvalidated.
 
 ## Roadmap (owner's stated intentions, not yet built)
 - Special abilities/affixes on gear (rarity variations beyond stat multipliers)

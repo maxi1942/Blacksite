@@ -127,7 +127,13 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0;}
 /* ===== BATTLE SCENE ===== */
 #battle-scene{position:relative;height:250px;border:1px solid var(--line);margin-bottom:8px;overflow:hidden;
  background:linear-gradient(180deg,#0a0d09 0%,#111a0e 56%,#232f1a 58%,#131a0e 100%);}
-#battle-scene::before{content:'';position:absolute;inset:0;pointer-events:none;
+/* per-dungeon color grade */
+#battle-scene.bg-rust{background:linear-gradient(180deg,#0f0a05 0%,#1a1108 56%,#302211 58%,#181006 100%);}
+#battle-scene.bg-lab{background:linear-gradient(180deg,#070d0e 0%,#0d1a1a 56%,#173029 58%,#0b1512 100%);}
+#battle-scene.bg-spire{background:linear-gradient(180deg,#0a0713 0%,#130e1d 56%,#251b33 58%,#110c18 100%);}
+#scene-bg{position:absolute;inset:0;z-index:0;pointer-events:none;}
+#scene-bg svg{width:100%;height:100%;display:block;}
+#battle-scene::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
  background-image:linear-gradient(rgba(138,150,131,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(138,150,131,.045) 1px,transparent 1px);
  background-size:26px 26px;}
 #pl-zone{position:absolute;left:4%;bottom:10px;text-align:center;z-index:2;}
@@ -228,6 +234,7 @@ body.dmgflash::after{content:'';position:fixed;inset:0;background:radial-gradien
   <!-- ============ COMBAT ============ -->
   <div id="screen-combat" class="hidden">
     <div id="battle-scene">
+      <div id="scene-bg"></div>
       <div class="eyebrow" id="combat-title" style="position:absolute;top:8px;left:10px;z-index:4">// CONTACT</div>
       <div id="pl-zone"></div>
       <div id="tr-zone"></div>
@@ -524,6 +531,49 @@ const TURRET_SVG=`<svg viewBox="0 0 64 64">
 <rect x="29" y="19.5" width="11" height="5" rx="1" fill="#5d6852"/><circle cx="44" cy="22" r="1.2" fill="#7dc95e"/>
 <path d="M31 36 h9" stroke="#2a2f28" stroke-width="1.5"/>
 </svg>`;
+/* Per-dungeon battle backdrops. Horizon sits at y≈145 of 250. Pure scenery —
+   very dark silhouettes + faint glows so combat figures stay readable on top. */
+const DUNGEON_BG={
+rust:`<svg viewBox="0 0 390 250" preserveAspectRatio="xMidYMax slice">
+<g stroke="#0d0906" stroke-width="4"><line x1="60" y1="145" x2="60" y2="30"/><line x1="60" y1="38" x2="150" y2="52"/><line x1="60" y1="72" x2="122" y2="48"/></g>
+<line x1="130" y1="50" x2="130" y2="84" stroke="#0d0906" stroke-width="2"/><rect x="124" y="84" width="13" height="11" fill="#0d0906"/>
+<rect x="228" y="58" width="11" height="87" fill="#0d0906"/>
+<circle cx="234" cy="50" r="7" fill="#1c150c" opacity=".5"/><circle cx="241" cy="40" r="9" fill="#1c150c" opacity=".32"/><circle cx="250" cy="31" r="11" fill="#1c150c" opacity=".2"/>
+<path d="M0 145 l28 -24 20 10 24 -18 30 22 16 -9 20 20 v14 H0 Z" fill="#100a05"/>
+<path d="M390 145 l-24 -30 -18 12 -22 -20 -28 26 -17 -6 -16 18 v10 h125 Z" fill="#0e0904"/>
+<rect x="298" y="118" width="60" height="15" rx="5" fill="#140d06"/><rect x="306" y="105" width="46" height="14" rx="5" fill="#170f08"/>
+<rect x="150" y="127" width="12" height="18" rx="2" fill="#140d06"/><rect x="163" y="131" width="12" height="14" rx="2" fill="#100a05"/><rect x="156" y="116" width="12" height="12" rx="2" fill="#170f08"/>
+<circle cx="182" cy="140" r="15" fill="#ff7a45" opacity=".07"/><circle cx="182" cy="142" r="5" fill="#ff9a3c" opacity=".18"/>
+<circle cx="332" cy="136" r="11" fill="#ff7a45" opacity=".06"/>
+<path d="M20 200 h14 M90 222 h11 M290 206 h16 M350 228 h12 M180 232 h9" stroke="#0d0906" stroke-width="3"/>
+</svg>`,
+lab:`<svg viewBox="0 0 390 250" preserveAspectRatio="xMidYMax slice">
+<path d="M0 11 h390 M0 20 h390" stroke="#0a1413" stroke-width="4"/>
+<g stroke="#0a1413" stroke-width="2"><line x1="45" y1="24" x2="45" y2="145"/><line x1="130" y1="24" x2="130" y2="145"/><line x1="262" y1="24" x2="262" y2="145"/><line x1="346" y1="24" x2="346" y2="145"/></g>
+<rect x="142" y="44" width="108" height="44" rx="4" fill="#0e2a2e" opacity=".5"/>
+<rect x="142" y="44" width="108" height="44" rx="4" fill="none" stroke="#0a1413" stroke-width="3"/><line x1="196" y1="44" x2="196" y2="88" stroke="#0a1413" stroke-width="3"/>
+<rect x="55" y="70" width="30" height="70" rx="8" fill="#0f3236" opacity=".5"/>
+<rect x="51" y="62" width="38" height="9" rx="2" fill="#0a1211"/><rect x="51" y="135" width="38" height="10" rx="2" fill="#0a1211"/>
+<circle cx="70" cy="96" r="2" fill="#56c8d8" opacity=".3"/><circle cx="66" cy="113" r="1.5" fill="#56c8d8" opacity=".25"/><circle cx="75" cy="124" r="1.6" fill="#56c8d8" opacity=".22"/>
+<rect x="300" y="78" width="26" height="60" rx="7" fill="#0f3236" opacity=".45"/>
+<rect x="296" y="70" width="34" height="9" rx="2" fill="#0a1211"/><rect x="296" y="132" width="34" height="10" rx="2" fill="#0a1211"/>
+<circle cx="313" cy="102" r="1.8" fill="#56c8d8" opacity=".28"/><circle cx="309" cy="119" r="1.4" fill="#56c8d8" opacity=".22"/>
+<rect x="108" y="112" width="30" height="33" rx="2" fill="#0a1411"/><circle cx="116" cy="120" r="1.6" fill="#7dc95e" opacity=".5"/><circle cx="124" cy="120" r="1.6" fill="#e05545" opacity=".45"/>
+<rect x="0" y="142" width="390" height="4" fill="#e8c15a" opacity=".07"/>
+</svg>`,
+spire:`<svg viewBox="0 0 390 250" preserveAspectRatio="xMidYMax slice">
+<g fill="#b7c2a9" opacity=".25"><circle cx="40" cy="32" r="1"/><circle cx="92" cy="18" r="1.2"/><circle cx="150" cy="26" r="1"/><circle cx="330" cy="24" r="1"/><circle cx="292" cy="56" r="1"/><circle cx="360" cy="72" r="1.1"/><circle cx="18" cy="70" r="1"/></g>
+<path d="M0 145 l48 -22 45 14 55 -30 60 24 55 -14 70 22 57 -12 v18 H0 Z" fill="#0b0812"/>
+<g stroke="#080610" stroke-width="3"><line x1="230" y1="145" x2="249" y2="14"/><line x1="286" y1="145" x2="267" y2="14"/><line x1="236" y1="106" x2="280" y2="106"/><line x1="242" y1="72" x2="274" y2="72"/><line x1="247" y1="42" x2="269" y2="42"/><line x1="236" y1="106" x2="274" y2="72"/><line x1="280" y1="106" x2="242" y2="72"/><line x1="242" y1="72" x2="269" y2="42"/><line x1="274" y1="72" x2="247" y2="42"/></g>
+<rect x="252" y="6" width="11" height="10" fill="#080610"/>
+<circle cx="257.5" cy="10" r="2.5" fill="#e05545" opacity=".8"/><circle cx="257.5" cy="10" r="6.5" fill="#e05545" opacity=".14"/>
+<path d="M246 6 q11 -12 23 0" stroke="#e05545" fill="none" opacity=".2" stroke-width="2"/>
+<path d="M60 124 a10 10 0 0 1 15 -12 Z" fill="#080610"/><line x1="67" y1="119" x2="73" y2="112" stroke="#080610" stroke-width="2"/>
+<path d="M334 120 a9 9 0 0 0 -16 -9 Z" fill="#080610"/>
+<rect x="118" y="126" width="36" height="19" rx="3" fill="#0b0812"/><rect x="124" y="132" width="6" height="4" fill="#e8c15a" opacity=".22"/>
+<path d="M40 205 h12 M320 215 h14 M200 228 h10" stroke="#0a0714" stroke-width="3"/>
+</svg>`,
+};
 /* Paper-doll: avatar reflects equipped gear. Faces RIGHT (toward the enemy). */
 function buildAvatar(){
   const col=P.cls==='marksman'?A:P.cls==='mechanic'?CY:P.cls==='assault'?O:'#7dc95e';
@@ -749,10 +799,10 @@ const SKILLS={
   spray:{n:'SPRAY',ap:2,cd:2,desc:'Empty a mag — 5 wild shots land on random enemies. 2 AP · cooldown 2.',
     sub:()=>{const d=sprayDmg();return `5× ${d.min}–${d.max} random`;},
     use:()=>{const d=sprayDmg();for(let k=0;k<5;k++){const alive=C.foes.filter(f=>f.hp>0);if(!alive.length)break;const f=pick(alive);muzzleFire();hitEnemy(f,Math.max(1,ri(d.min,d.max)-f.armor),false,'Spray');}}},
-  flash:{n:'FLASHBANG',ap:1,cd:4,desc:'Stuns ALL enemies — they skip their next turn. 1 AP · cooldown 4.',
-    sub:()=>'stun all 1 turn',
-    use:()=>{C.foes.forEach(f=>{if(f.hp>0){f.stun=1;setIntent(f);}});log('Flashbang out — hostiles stunned.','sys');}},
-  camo:{n:'CAMO',ap:1,cd:5,desc:'Camouflage — enemies cannot hit you for 2 rounds. 1 AP · cooldown 5.',
+  flash:{n:'FLASHBANG',ap:2,cd:4,desc:'Stuns ALL normal enemies for 1 turn. Elites & bosses are hardened — dazed instead (next attack −50%). 2 AP · cooldown 4.',
+    sub:()=>'stun all · daze elites',
+    use:()=>{C.foes.forEach(f=>{if(f.hp<=0)return;if(f.big)f.dazed=1;else f.stun=1;setIntent(f);});log('Flashbang out — hostiles stunned. Hardened targets are dazed.','sys');}},
+  camo:{n:'CAMO',ap:2,cd:6,desc:'Camouflage — enemies cannot hit you for 2 rounds. 2 AP · cooldown 6.',
     sub:()=>'untouchable '+(2+tr('ghost'))+' rounds',
     use:()=>{C.camo=2+tr('ghost');log('Camouflage active — you fade into the terrain.','good');}},
   patch:{n:'FIELD PATCH',ap:1,cd:3,desc:'Quick self-heal, scales with threat level. 1 AP · cooldown 3.',
@@ -905,7 +955,7 @@ function newRun(clsId){
      gold:30,items:[],inv:[],
      equip:{pistol:mkWeaponItem(cls.start),w1:null,w2:null,ammo:null,helmet:null,chest:null,legs:null,boots:null,special:null},
      mods:{dmg:0,crit:0,cx:0,gold:0,dodge:0,tmax:2,mag:0},
-     skills:[SIG_SKILL[clsId]],tp:0,tree:{},perks:[],flags:{}};
+     skills:[SIG_SKILL[clsId]],tp:0,tree:{},perks:[],cds:{},flags:{}};
   if(has('hp1')){P.maxhp+=10;P.hp+=10;}
   if(has('hp2')){P.maxhp+=15;P.hp+=15;}
   if(has('dmg1'))P.mods.dmg+=.08;
@@ -1071,7 +1121,7 @@ function scaleE(base,tier,layer){
     dmg:[Math.round(base.dmg[0]*d),Math.round(base.dmg[1]*d)],
     armor:base.armor||0,dodge:base.dodge||0,double:!!base.double,
     charge:base.charge?[Math.round(base.charge[0]*d),Math.round(base.charge[1]*d)]:null,
-    summon:!!base.summon,enrage:!!base.enrage,charging:false,stun:0,suppress:0,intent:null};
+    summon:!!base.summon,enrage:!!base.enrage,charging:false,stun:0,suppress:0,dazed:0,intent:null};
 }
 function startCombat(kind){
   const t=RUN.tier;
@@ -1082,15 +1132,19 @@ function startCombat(kind){
     const count=clamp(n,1,3);
     for(let i=0;i<count;i++)foes.push(scaleE(pick(ENEMIES),t,layer));
   }else if(kind==='elite'){
-    foes.push(scaleE(pick(ELITES),t,layer));
+    const e=scaleE(pick(ELITES),t,layer);e.big=true; // hardened: resists full stuns
+    foes.push(e);
     if(rf()<.4)foes.push(scaleE(pick(ENEMIES),t,layer));
   }else{
-    foes.push(scaleE(dungeon().boss,t,0)); // bosses tuned as fixed endpoints
+    const b=scaleE(dungeon().boss,t,0);b.big=true; // bosses tuned as fixed endpoints
+    foes.push(b);
   }
   const apm=3+tr('apx');
   C={kind,foes,turrets:[],mines:0,target:0,ap:apm,apmax:apm,
-     aim:0,camo:0,cds:{},firstAtk:true,
+     aim:0,camo:0,firstAtk:true,
      killedThisTurn:false,streak:0,lsUsed:false,turn:1,busy:false,ammo:{}};
+  $('battle-scene').className='bg-'+RUN.dungeon;
+  $('scene-bg').innerHTML=DUNGEON_BG[RUN.dungeon]||'';
   equippedWeapons().forEach(it=>{
     const w=wstat(it);
     if(w.mag)C.ammo[it.uid]={left:w.mag,cap:w.mag};
@@ -1115,7 +1169,7 @@ function intentText(f){
   if(i.t==='charge')return'▲CHARGING';
   if(i.t==='heavy')return`▶HVY ${i.d[0]}–${i.d[1]}`;
   if(i.t==='summon')return'▶BACKUP';
-  const s=f.suppress>0?'·sup':'';
+  const s=(f.dazed>0?'·dazed':'')+(f.suppress>0?'·sup':'');
   return`▶${i.d[0]}–${i.d[1]}${i.x>1?'×2':''}${s}`;
 }
 function log(msg,cl){
@@ -1178,7 +1232,7 @@ function renderCombat(){
   // skills (with cooldowns)
   const sk=$('skill-row');sk.innerHTML='';
   P.skills.forEach(id=>{
-    const s=SKILLS[id],ap=skillAP(id),cdLeft=C.cds[id]||0;
+    const s=SKILLS[id],ap=skillAP(id),cdLeft=P.cds[id]||0;
     const b=document.createElement('button');b.className='skillbtn'+(cdLeft>0?' cd':'');
     b.innerHTML=`${s.n}<span class="cost">${cdLeft>0?'CD '+cdLeft:ap+' AP'}</span><span class="sub">${s.sub()}</span>`;
     b.disabled=busy||cdLeft>0||C.ap<ap||(s.can&&!s.can());
@@ -1196,10 +1250,10 @@ function renderCombat(){
 }
 function useSkill(id){
   const s=SKILLS[id],ap=skillAP(id);
-  if(!C||C.busy||C.ap<ap||(C.cds[id]||0)>0||(s.can&&!s.can()))return;
+  if(!C||C.busy||C.ap<ap||(P.cds[id]||0)>0||(s.can&&!s.can()))return;
   C.ap-=ap;
   const cd=skillCD(id);
-  if(cd>0)C.cds[id]=cd;
+  if(cd>0)P.cds[id]=cd; // cooldowns persist across fights — they only tick down during combat turns
   s.use();
   afterPlayerAction();
 }
@@ -1325,6 +1379,7 @@ $('btn-endturn').onclick=async()=>{
       }
       if(C.camo>0){log('Camouflaged — '+f.name+' fires blind and misses.','good');floatAt($('player-avatar'),'HIDDEN','miss');continue;}
       let d=ri(i.d[0],i.d[1]);
+      if(f.dazed>0){d=Math.round(d*.5);}
       if(f.suppress>0){d=Math.round(d*.75);}
       if(f.enrage&&f.hp<f.max/2)d=Math.round(d*1.4);
       if(P.mods.dodge>0&&rf()<P.mods.dodge){log('You dodge '+f.name+"'s attack!",'good');floatAt($('player-avatar'),'DODGE','miss');continue;}
@@ -1333,7 +1388,7 @@ $('btn-endturn').onclick=async()=>{
       if(P.hp<=0)return;
       if(hits>1)await sleep(280);
     }
-    f.suppress=0;
+    f.suppress=0;f.dazed=0;
     await sleep(180);
   }
   if(!C||P.hp<=0)return;
@@ -1341,7 +1396,7 @@ $('btn-endturn').onclick=async()=>{
   C.turn++;
   C.ap=C.apmax;C.killedThisTurn=false;C.busy=false;
   if(C.camo>0)C.camo--;
-  for(const k in C.cds)if(C.cds[k]>0)C.cds[k]--;
+  for(const k in P.cds)if(P.cds[k]>0)P.cds[k]--;
   C.foes.forEach(f=>{if(f.hp>0)setIntent(f);});
   renderCombat();
 };
@@ -1683,8 +1738,8 @@ function renderPanelChar(){
       Gold bonus <b>+${Math.round(P.mods.gold*100)}%</b> · Consumables <b>${P.items.length}</b>
     </div>
   </div>
-  <div class="eyebrow">// SKILLS</div>
-  <div class="small" style="margin-bottom:10px">${P.skills.map(id=>`<div style="margin-bottom:3px"><b style="color:var(--amber2)">${SKILLS[id].n}</b> — ${SKILLS[id].desc}</div>`).join('')}</div>
+  <div class="eyebrow">// SKILLS <span style="letter-spacing:0">(cooldowns carry over between fights)</span></div>
+  <div class="small" style="margin-bottom:10px">${P.skills.map(id=>`<div style="margin-bottom:3px"><b style="color:var(--amber2)">${SKILLS[id].n}</b>${(P.cds[id]||0)>0?` <span style="color:var(--red)">— recharging, ${P.cds[id]} turn${P.cds[id]===1?'':'s'}</span>`:''} — ${SKILLS[id].desc}</div>`).join('')}</div>
   <div class="eyebrow">// FIELD UPGRADES</div>
   <div class="small">${P.perks.length?P.perks.join(' · '):'None yet — offered after fights.'}</div>`;
 }
