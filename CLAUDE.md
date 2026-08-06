@@ -19,6 +19,8 @@ Modern-military turn-based roguelike. Slay-the-Spire map structure, XCOM flavor.
 - **Map:** 18 layers, `genMap()`; elites only layer ≥6; SVG connector lines between layers; first dungeon always Rust Yards, then choose between the other two at tier+1 after each boss.
 - **Enemy scaling:** by dungeon tier AND map depth (`scaleE(base, tier, layer)`); bosses exempt from depth scaling (fixed endpoints).
 - **Persistence:** dual-mode in `loadMeta/saveMeta` — `window.storage` (Claude artifact) → `localStorage` (standalone/GitHub Pages) → memory. Key `blacksite-meta`. META holds scrap, unlocks, runs, bestTier, kills, found (codex discovery).
+- **Run save/resume:** the in-progress run (`P`, `RUN`, `C`, `UID`) auto-saves as JSON under key `blacksite-run` via `saveRun()` (hooked into `updateHUD`, skipped while `C.busy` so resume always lands on a player turn). Cleared on death/extract. Title screen shows a RESUME OPERATION card. Keep all run state JSON-serializable — no functions or DOM refs in `P`/`RUN`/`C`.
+- **Skill upgrades:** requisition offers can contain a skill the player already owns → upgrades it to level II (`P.skillLv`, effects in `UPG_DESC`/`slv()`). Max level II — signature class skills upgrade via the Specialist tree node instead, never via offers.
 
 ## Code conventions
 - Everything in `index.html`. Data tables at top of script (WEAPONS, GEART, RARITIES, CLASSES, SKILLS, TREE/SPEC_BRANCH, PERKS, ENEMIES, ELITES, DUNGEONS, ARMORY, CONSUMABLES).
@@ -30,10 +32,15 @@ Modern-military turn-based roguelike. Slay-the-Spire map structure, XCOM flavor.
 ## Balance philosophy (hard-won through playtests)
 Owner repeatedly found the player too strong. Enemies should take 3–4 turns to kill early. When adding power sources, compensate elsewhere. Camo+Flashbang chaining felt too safe and was nerfed three ways at once (2 AP each, cross-fight cooldowns, elite/boss stun immunity) — revisit if they now feel dead. Known watch items: Mechanic historically stronger than Marksman (turrets = free damage); boss difficulty after the 18-layer extension is unvalidated.
 
-## Roadmap (owner's stated intentions, not yet built)
+## Roadmap (agreed direction, not yet built — roughly in priority order)
+- **Dungeon-specific enemy pools + a signature mechanic per dungeon** (e.g. Labs: shielded prototypes/drone swarms; Spire: snipers that mark you for bonus damage next turn). Makes the post-boss dungeon choice strategic, not cosmetic.
+- **Contracts:** 2–3 rotating optional challenges that pay scrap ("kill an elite with a grenade", "clear a fight untouched", "beat a boss with only the pistol"). Second scrap faucet; keep payouts modest.
+- **Juice pass:** boss intro name banner, kill flash/slow-beat, rarity fanfare on purple/orange drops, end-of-run summary stats (damage dealt, crits, biggest hit).
+- **Skill level III** tier if level II picks prove fun (keep max level II until balance settles).
 - Special abilities/affixes on gear (rarity variations beyond stat multipliers)
 - More weapon models per icon type
 - Possible rest-site/checkpoint node if 18-layer death loss feels brutal
+- Daily seed / weekly mutator runs (only if the game finds an audience)
 - Eventually: app packaging (PWA/Capacitor)
 
 ## Testing

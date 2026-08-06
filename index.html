@@ -195,7 +195,7 @@ body.dmgflash::after{content:'';position:fixed;inset:0;background:radial-gradien
       <div class="eyebrow">// TACTICAL ROGUELIKE OPERATION</div>
       <h1 style="margin:0;font-size:34px;color:var(--amber);">BLACKSITE</h1>
       <div class="small">deploy · fight · extract scrap · upgrade · redeploy</div>
-      <div class="small" id="build-tag" style="opacity:.55;margin-top:4px">build 4 · 06 aug 2026</div>
+      <div class="small" id="build-tag" style="opacity:.55;margin-top:4px">build 5 · 06 aug 2026</div>
     </div>
     <div class="eyebrow">SELECT OPERATIVE</div>
     <div id="class-list"></div>
@@ -282,8 +282,12 @@ body.dmgflash::after{content:'';position:fixed;inset:0;background:radial-gradien
     <div class="hud" style="text-align:center;padding:26px 12px;">
       <div class="eyebrow">// OPERATIVE DOWN</div>
       <h1 style="color:var(--red);margin:6px 0">K.I.A.</h1>
-      <div id="go-stats" class="small" style="margin-bottom:14px"></div>
-      <button class="primary" style="width:100%" id="btn-go-menu">RETURN TO BASE ▸</button>
+      <div id="go-stats" class="small" style="margin-bottom:10px"></div>
+      <div id="go-teaser" style="margin-bottom:14px;font-size:13px"></div>
+      <div class="row">
+        <button class="grow primary" id="btn-go-armory">⚙ OPEN ARMORY ▸</button>
+        <button class="grow" id="btn-go-menu">RETURN TO BASE ▸</button>
+      </div>
     </div>
   </div>
 
@@ -773,9 +777,11 @@ const SIG_SKILL={marksman:'aim',mechanic:'turret',assault:'adrenaline',medic:'tr
 /* ------ SKILLS — active abilities with cooldowns (cooldowns tick per combat turn) ------ */
 function tr(id){return (P&&P.tree[id])||0;}                    // talent-tree rank
 function sigR(cls){return P.cls===cls?tr('sig'):0;}            // Specialist rank, class-gated
-function grenadeDmg(){const m=1+.3*tr('demo');return{min:Math.round((8+3*RUN.tier)*m),max:Math.round((12+3*RUN.tier)*m)};}
+function slv(id){return (P&&P.skillLv&&P.skillLv[id])||1;}     // skill level (II via duplicate requisition picks)
+function grenadeDmg(){const m=(1+.3*tr('demo'))*(slv('grenade')>1?1.5:1);return{min:Math.round((8+3*RUN.tier)*m),max:Math.round((12+3*RUN.tier)*m)};}
 function sprayDmg(){const m=1+.3*tr('demo');return{min:Math.round((3+RUN.tier)*m),max:Math.round((5+RUN.tier)*m)};}
-function healAmt(id){return (id==='triage'?12+6*sigR('medic'):10+4*RUN.tier)+8*tr('medic2');}
+function sprayShots(){return slv('spray')>1?7:5;}
+function healAmt(id){return (id==='triage'?12+6*sigR('medic'):10+4*RUN.tier+(slv('patch')>1?10:0))+8*tr('medic2');}
 function mineDmg(){return 12+4*RUN.tier;}
 function turretDmg(){return 3*sigR('mechanic');}
 const SKILLS={
@@ -798,8 +804,8 @@ const SKILLS={
     sub:()=>{const d=grenadeDmg();return `${d.min}–${d.max} ALL`;},
     use:()=>{const d=grenadeDmg();shakeScreen();C.foes.forEach(f=>{if(f.hp>0)hitEnemy(f,ri(d.min,d.max),false,'Grenade');});}},
   spray:{n:'SPRAY',ap:2,cd:2,desc:'Empty a mag — 5 wild shots land on random enemies. 2 AP · cooldown 2.',
-    sub:()=>{const d=sprayDmg();return `5× ${d.min}–${d.max} random`;},
-    use:()=>{const d=sprayDmg();for(let k=0;k<5;k++){const alive=C.foes.filter(f=>f.hp>0);if(!alive.length)break;const f=pick(alive);muzzleFire();hitEnemy(f,Math.max(1,ri(d.min,d.max)-f.armor),false,'Spray');}}},
+    sub:()=>{const d=sprayDmg();return `${sprayShots()}× ${d.min}–${d.max} random`;},
+    use:()=>{const d=sprayDmg();for(let k=0;k<sprayShots();k++){const alive=C.foes.filter(f=>f.hp>0);if(!alive.length)break;const f=pick(alive);muzzleFire();hitEnemy(f,Math.max(1,ri(d.min,d.max)-f.armor),false,'Spray');}}},
   flash:{n:'FLASHBANG',ap:2,cd:4,desc:'Stuns ALL normal enemies for 1 turn. Elites & bosses are hardened — dazed instead (next attack −50%). 2 AP · cooldown 4.',
     sub:()=>'stun all · daze elites',
     use:()=>{C.foes.forEach(f=>{if(f.hp<=0)return;if(f.big)f.dazed=1;else f.stun=1;setIntent(f);});log('Flashbang out — hostiles stunned. Hardened targets are dazed.','sys');}},
@@ -811,12 +817,19 @@ const SKILLS={
     can:()=>P.hp<P.maxhp,
     use:()=>{const a=healAmt('patch');heal(a);log('Patched up: +'+a+' HP.','good');}},
   mine:{n:'MINE',ap:1,cd:2,desc:'Arm a mine — the next enemy that attacks you takes heavy damage. 1 AP · cooldown 2.',
-    sub:()=>mineDmg()+' to next attacker',
-    use:()=>{C.mines++;log('Mine armed.','sys');}},
+    sub:()=>mineDmg()+' to next attacker'+(slv('mine')>1?' ×2':''),
+    use:()=>{C.mines+=slv('mine')>1?2:1;log(slv('mine')>1?'Twin mines armed.':'Mine armed.','sys');}},
 };
 const GENERIC_SKILLS=['grenade','spray','flash','camo','patch','mine'];
+/* Level II effects, granted by picking a skill you already own in a requisition offer */
+const UPG_DESC={grenade:'+50% damage',spray:'7 shots instead of 5',flash:'cooldown −1',camo:'cooldown −1',patch:'heals +10 more',mine:'arms 2 mines at once'};
 function skillAP(id){return (id==='turret'&&tr('rdep'))?1:SKILLS[id].ap;}
-function skillCD(id){const b=SKILLS[id].cd;return b<=0?0:Math.max(1,b-tr('cool'));}
+function skillCD(id){
+  let b=SKILLS[id].cd;
+  if((id==='flash'||id==='camo')&&slv(id)>1)b-=1;
+  return b<=0?0:Math.max(1,b-tr('cool'));
+}
+function skillName(id){return SKILLS[id].n+(slv(id)>1?' II':'');}
 /* ------ TALENT TREE — level-ups grant points; deeper rows need points spent in that branch ------ */
 const TREE=[
  {br:'COMBAT',nodes:[
@@ -945,6 +958,36 @@ async function saveMeta(){
 }
 const has=id=>META.unlocks.includes(id);
 
+/* ---- run save/resume: the whole run state is plain JSON (P, RUN, C, UID).
+   Saved via updateHUD after every state change; skipped mid-enemy-turn so a
+   resume always lands at the start of a player turn. ---- */
+let SAVED=null;
+function saveRun(){
+  if(!P||!RUN||P.hp<=0)return;
+  if(C&&C.busy)return;
+  const data=JSON.stringify({v:1,P,RUN,C,UID});
+  try{if(hasClaudeStore){window.storage.set('blacksite-run',data);return;}}catch(e){}
+  try{localStorage.setItem('blacksite-run',data);}catch(e){}
+}
+async function loadRun(){
+  try{
+    if(hasClaudeStore){
+      const r=await window.storage.get('blacksite-run');
+      if(r&&r.value)SAVED=JSON.parse(r.value);
+      return;
+    }
+  }catch(e){}
+  try{
+    const v=localStorage.getItem('blacksite-run');
+    if(v)SAVED=JSON.parse(v);
+  }catch(e){}
+}
+function clearRun(){
+  SAVED=null;
+  try{if(hasClaudeStore){if(window.storage.delete)window.storage.delete('blacksite-run');else window.storage.set('blacksite-run','');return;}}catch(e){}
+  try{localStorage.removeItem('blacksite-run');}catch(e){}
+}
+
 /* =================== RUN STATE =================== */
 let P=null;       // player
 let RUN=null;     // run info
@@ -956,7 +999,7 @@ function newRun(clsId){
      gold:30,items:[],inv:[],
      equip:{pistol:mkWeaponItem(cls.start),w1:null,w2:null,ammo:null,helmet:null,chest:null,legs:null,boots:null,special:null},
      mods:{dmg:0,crit:0,cx:0,gold:0,dodge:0,tmax:2,mag:0},
-     skills:[SIG_SKILL[clsId]],tp:0,tree:{},perks:[],cds:{},flags:{}};
+     skills:[SIG_SKILL[clsId]],skillLv:{},tp:0,tree:{},perks:[],cds:{},flags:{}};
   if(has('hp1')){P.maxhp+=10;P.hp+=10;}
   if(has('hp2')){P.maxhp+=15;P.hp+=15;}
   if(has('dmg1'))P.mods.dmg+=.08;
@@ -969,6 +1012,7 @@ function newRun(clsId){
   RUN={tier:0,dungeon:'rust',map:null,pos:null,kills:0,scrapEarned:0,bossKills:0};
   RUN.map=genMap();
   META.runs++;saveMeta();
+  SAVED=null;
   showScreen('map');renderMap();updateHUD();
 }
 function dungeon(){return DUNGEONS.find(d=>d.id===RUN.dungeon);}
@@ -1144,18 +1188,34 @@ function startCombat(kind){
   C={kind,foes,turrets:[],mines:0,target:0,ap:apm,apmax:apm,
      aim:0,camo:0,firstAtk:true,
      killedThisTurn:false,streak:0,lsUsed:false,turn:1,busy:false,ammo:{}};
-  $('battle-scene').className='bg-'+RUN.dungeon;
-  $('scene-bg').innerHTML=DUNGEON_BG[RUN.dungeon]||'';
   equippedWeapons().forEach(it=>{
     const w=wstat(it);
     if(w.mag)C.ammo[it.uid]={left:w.mag,cap:w.mag};
   });
   C.foes.forEach(setIntent);
-  $('pl-zone').innerHTML=`<div id="player-avatar">${buildAvatar()}<span id="muzzle"></span></div><div class="figshadow"></div><div class="fname ${CLASSES[P.cls].acc}">${CLASSES[P.cls].name}</div>`;
-  $('combat-title').textContent='// '+(kind==='fight'?'CONTACT':kind==='elite'?'ELITE CONTACT':'BOSS — '+dungeon().name);
-  $('log').innerHTML='';
+  setupCombatScene();
   log('Engagement started. Tap an enemy to target it.','sys');
   showScreen('combat');renderCombat();
+}
+function setupCombatScene(){
+  $('battle-scene').className='bg-'+RUN.dungeon;
+  $('scene-bg').innerHTML=DUNGEON_BG[RUN.dungeon]||'';
+  $('pl-zone').innerHTML=`<div id="player-avatar">${buildAvatar()}<span id="muzzle"></span></div><div class="figshadow"></div><div class="fname ${CLASSES[P.cls].acc}">${CLASSES[P.cls].name}</div>`;
+  $('combat-title').textContent='// '+(C.kind==='fight'?'CONTACT':C.kind==='elite'?'ELITE CONTACT':'BOSS — '+dungeon().name);
+  $('log').innerHTML='';
+}
+function resumeRun(data){
+  P=data.P;RUN=data.RUN;C=data.C||null;UID=Math.max(UID,data.UID||1);
+  P.skillLv=P.skillLv||{}; // saves from before skill upgrades existed
+  updateHUD();
+  if(C){
+    C.busy=false; // always resumes at the start of a player turn
+    setupCombatScene();
+    log('Operation resumed. Hostiles re-acquired.','sys');
+    showScreen('combat');renderCombat();
+  }else{
+    showScreen('map');renderMap();
+  }
 }
 function setIntent(f){
   if(f.stun>0){f.intent={t:'stunned'};return;}
@@ -1235,7 +1295,7 @@ function renderCombat(){
   P.skills.forEach(id=>{
     const s=SKILLS[id],ap=skillAP(id),cdLeft=P.cds[id]||0;
     const b=document.createElement('button');b.className='skillbtn'+(cdLeft>0?' cd':'');
-    b.innerHTML=`${s.n}<span class="cost">${cdLeft>0?'CD '+cdLeft:ap+' AP'}</span><span class="sub">${s.sub()}</span>`;
+    b.innerHTML=`${skillName(id)}<span class="cost">${cdLeft>0?'CD '+cdLeft:ap+' AP'}</span><span class="sub">${s.sub()}</span>`;
     b.disabled=busy||cdLeft>0||C.ap<ap||(s.can&&!s.can());
     b.onclick=()=>useSkill(id);
     sk.appendChild(b);
@@ -1461,9 +1521,12 @@ function winCombat(){
 }
 /* Field Requisition — pick one small upgrade or new skill after each non-boss fight */
 function buildOffer(kind){
-  const pool=GENERIC_SKILLS.filter(s=>!P.skills.includes(s));
+  // one skill-slot card: a NEW skill you lack, or an UPGRADE of one you own (level II max)
+  const newPool=GENERIC_SKILLS.filter(s=>!P.skills.includes(s)).map(id=>({type:'skill',id}));
+  const upPool=GENERIC_SKILLS.filter(s=>P.skills.includes(s)&&slv(s)<2).map(id=>({type:'skillup',id}));
+  const skillCards=newPool.concat(upPool);
   const cards=[];
-  if(pool.length&&(kind==='elite'||rf()<.6))cards.push({type:'skill',id:pick(pool)});
+  if(skillCards.length&&(kind==='elite'||rf()<.6))cards.push(pick(skillCards));
   const perkPool=shuffle(PERKS.filter(p=>!p.once||!P.flags[p.once]));
   while(cards.length<3&&perkPool.length)cards.push({type:'perk',p:perkPool.pop()});
   return shuffle(cards);
@@ -1474,11 +1537,14 @@ function renderOffer(offer){
   offer.forEach(c=>{
     const b=document.createElement('button');b.className='choice';
     if(c.type==='skill')b.innerHTML=`<b>⚡ NEW SKILL: ${SKILLS[c.id].n}</b><br><span class="small">${SKILLS[c.id].desc}</span>`;
+    else if(c.type==='skillup')b.innerHTML=`<b>⬆ UPGRADE: ${SKILLS[c.id].n} II</b><br><span class="small">${UPG_DESC[c.id]}</span>`;
     else b.innerHTML=`<b>${c.p.n}</b><br><span class="small">${c.p.d}</span>`;
     b.onclick=()=>{
-      if(c.type==='skill')P.skills.push(c.id);
-      else{c.p.f();P.perks.push(c.p.n);}
-      el.innerHTML=`<hr><div class="small" style="color:var(--green)">✓ ${c.type==='skill'?'Skill acquired: '+SKILLS[c.id].n:c.p.n}</div>`;
+      let msg;
+      if(c.type==='skill'){P.skills.push(c.id);P.skillLv[c.id]=1;msg='Skill acquired: '+SKILLS[c.id].n;}
+      else if(c.type==='skillup'){P.skillLv[c.id]=2;msg=SKILLS[c.id].n+' upgraded to II — '+UPG_DESC[c.id];}
+      else{c.p.f();P.perks.push(c.p.n);msg=c.p.n;}
+      el.innerHTML=`<hr><div class="small" style="color:var(--green)">✓ ${msg}</div>`;
       updateHUD();
     };
     el.appendChild(b);
@@ -1658,26 +1724,56 @@ function showVictory(){
   });
   showScreen('victory');
 }
+/* Armory teaser: give the player a concrete next goal the moment a run ends */
+function armoryTeaser(){
+  const locked=ARMORY.filter(a=>!has(a.id)&&(!a.req||has(a.req))).sort((a,b)=>a.cost-b.cost);
+  if(!locked.length)return'⚙ Armory fully unlocked. You ARE the meta-progression now.';
+  const afford=locked.filter(a=>META.scrap>=a.cost);
+  if(afford.length){
+    const a=afford[afford.length-1];
+    return `⚙ You can afford <b style="color:var(--amber)">${a.n}</b> (${a.cost} scrap) <b style="color:var(--green)">right now</b>.`;
+  }
+  const a=locked[0];
+  return `⚙ <b style="color:var(--amber)">${a.n}</b> is only <b>${a.cost-META.scrap}</b> scrap away.`;
+}
 $('btn-extract').onclick=()=>{
+  clearRun();
   $('go-stats').innerHTML=`Extracted alive. Bosses killed: ${RUN.bossKills} · Kills: ${RUN.kills}<br>Scrap banked: <b style="color:var(--amber)">${RUN.scrapEarned}</b>`;
+  $('go-teaser').innerHTML=armoryTeaser();
   document.querySelector('#screen-gameover h1').textContent='EXTRACTED';
   document.querySelector('#screen-gameover h1').style.color='var(--green)';
   showScreen('gameover');
 };
 function gameOver(){
   C=null;
+  clearRun();
   document.querySelector('#screen-gameover h1').textContent='K.I.A.';
   document.querySelector('#screen-gameover h1').style.color='var(--red)';
   $('go-stats').innerHTML=`Died in ${dungeon().name} (threat ${RUN.tier+1}) · Level ${P.level} · ${RUN.kills} kills<br>Scrap banked: <b style="color:var(--amber)">${RUN.scrapEarned}</b> — spend it in the Armory.`;
+  $('go-teaser').innerHTML=armoryTeaser();
   showScreen('gameover');
 }
 $('btn-go-menu').onclick=()=>{P=null;RUN=null;renderMenu();showScreen('menu');};
+$('btn-go-armory').onclick=()=>{P=null;RUN=null;renderArmory();showScreen('armory');};
 
 /* =================== MENU / ARMORY =================== */
 function renderMenu(){
   $('menu-scrap').textContent=META.scrap;
   $('menu-stats').textContent=`Runs: ${META.runs} · Best threat level: ${META.bestTier} · Career kills: ${META.kills}`+(memOnly?' · (saving unavailable — progress is session-only)':'');
   const el=$('class-list');el.innerHTML='';
+  if(SAVED&&SAVED.P&&SAVED.RUN){
+    const s=SAVED;
+    const b=document.createElement('button');
+    b.className='classcard hud';b.style.borderColor='var(--green)';
+    b.innerHTML=`<h3 style="color:var(--green)">▶ RESUME OPERATION</h3>
+      <div class="small">${CLASSES[s.P.cls].name} · Level ${s.P.level} · ${DUNGEONS.find(d=>d.id===s.RUN.dungeon).name} · Threat ${s.RUN.tier+1} · Sector ${(s.RUN.pos?s.RUN.pos.layer:0)+1}/18${s.C?' · IN COMBAT':''}</div>`;
+    b.onclick=()=>resumeRun(s);
+    el.appendChild(b);
+    const note=document.createElement('div');
+    note.className='small';note.style.margin='2px 0 10px';
+    note.textContent='Starting a new operative abandons the saved run.';
+    el.appendChild(note);
+  }
   Object.values(CLASSES).forEach(c=>{
     const locked=c.locked&&!has(c.id);
     const b=document.createElement('button');
@@ -1740,7 +1836,7 @@ function renderPanelChar(){
     </div>
   </div>
   <div class="eyebrow">// SKILLS <span style="letter-spacing:0">(cooldowns carry over between fights)</span></div>
-  <div class="small" style="margin-bottom:10px">${P.skills.map(id=>`<div style="margin-bottom:3px"><b style="color:var(--amber2)">${SKILLS[id].n}</b>${(P.cds[id]||0)>0?` <span style="color:var(--red)">— recharging, ${P.cds[id]} turn${P.cds[id]===1?'':'s'}</span>`:''} — ${SKILLS[id].desc}</div>`).join('')}</div>
+  <div class="small" style="margin-bottom:10px">${P.skills.map(id=>`<div style="margin-bottom:3px"><b style="color:var(--amber2)">${skillName(id)}</b>${(P.cds[id]||0)>0?` <span style="color:var(--red)">— recharging, ${P.cds[id]} turn${P.cds[id]===1?'':'s'}</span>`:''} — ${SKILLS[id].desc}${slv(id)>1?' <span style="color:var(--green)">[II: '+UPG_DESC[id]+']</span>':''}</div>`).join('')}</div>
   <div class="eyebrow">// FIELD UPGRADES</div>
   <div class="small">${P.perks.length?P.perks.join(' · '):'None yet — offered after fights.'}</div>`;
 }
@@ -1879,6 +1975,7 @@ function updateHUD(){
   $('hud-gold').textContent=P.gold;
   $('hud-scrap').textContent=META.scrap;
   $('tp-badge').textContent=P.tp>0?'●'+P.tp:'';
+  saveRun(); // updateHUD runs after every state change — cheap, keeps the run resumable
 }
 const SCREENS=['menu','armory','map','combat','shop','trainer','event','gameover','victory','codex'];
 function showScreen(s){
@@ -1893,6 +1990,7 @@ function showScreen(s){
 /* =================== BOOT =================== */
 (async function(){
   await loadMeta();
+  await loadRun();
   renderMenu();
   showScreen('menu');
 })();
