@@ -37,4 +37,4 @@ Owner repeatedly found the player too strong. Enemies should take 3–4 turns to
 - Eventually: app packaging (PWA/Capacitor)
 
 ## Testing
-No test suite. After changes: syntax-check the script block, then the owner playtests on iPhone via GitHub Pages. Prefer small, reviewable diffs — the owner reviews from a phone.
+No test suite. After changes: syntax-check the script block, then the owner playtests on iPhone via GitHub Pages. Prefer small, reviewable diffs — the owner reviews from a phone. Bump the `#build-tag` line on the title screen with every shipped change — it's how the owner verifies their phone picked up the new deploy (home-screen web apps cache hard).
