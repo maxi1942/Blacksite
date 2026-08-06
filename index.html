@@ -150,6 +150,9 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0;}
 .fname{font-size:9px;letter-spacing:.05em;font-family:'Rajdhani',sans-serif;font-weight:700;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ebar{height:5px;background:#0b0e0a;border:1px solid var(--line);margin:2px 5px;}
 .ebar>i{display:block;height:100%;background:var(--red);}
+.ebar.sh{height:4px;margin-bottom:0;border-color:#1d4a52;}
+.ebar.sh>i{background:var(--cyan);}
+.fdmg.sh{color:var(--cyan);font-size:17px;}
 .esub{font-size:9px;color:var(--dim);}
 .eintent{font-size:9px;color:var(--red);min-height:11px;}
 .figshadow{height:7px;margin:-5px auto 2px;width:72%;background:radial-gradient(ellipse,rgba(0,0,0,.6),transparent 70%);}
@@ -195,7 +198,7 @@ body.dmgflash::after{content:'';position:fixed;inset:0;background:radial-gradien
       <div class="eyebrow">// TACTICAL ROGUELIKE OPERATION</div>
       <h1 style="margin:0;font-size:34px;color:var(--amber);">BLACKSITE</h1>
       <div class="small">deploy · fight · extract scrap · upgrade · redeploy</div>
-      <div class="small" id="build-tag" style="opacity:.55;margin-top:4px">build 5 · 06 aug 2026</div>
+      <div class="small" id="build-tag" style="opacity:.55;margin-top:4px">build 6 · 06 aug 2026</div>
     </div>
     <div class="eyebrow">SELECT OPERATIVE</div>
     <div id="class-list"></div>
@@ -525,6 +528,73 @@ kessler:svgS(`
 <rect x="25.5" y="44.5" width="6" height="11" fill="#23261e"/><rect x="33.5" y="44.5" width="6" height="11" fill="#1e211a"/>
 <rect x="25.5" y="44.5" width="6" height="1.6" fill="${HL}" opacity=".35"/><rect x="33.5" y="44.5" width="6" height="1.6" fill="${HL}" opacity=".35"/>
 <path d="M24.5 55.5 h8 M32.5 55.5 h8" stroke="#15180f" stroke-width="2.4"/>`),
+sniper:svgS(`
+<path d="M25.5 10.5 a7 6 0 0 1 13.5 1.5 l-2 4.5 h-10 Z" fill="#4a4256"/><path d="M25 12 q-1.8 3 -.8 6.5" stroke="#3d3648" stroke-width="2" fill="none"/>
+<circle cx="31" cy="16" r="4.7" fill="${SK}"/>
+<path d="M26.8 14.2 l2.6 1 M35.2 14.2 l-2.6 1" stroke="#1c140e" stroke-width="1.2"/>
+<rect x="27.4" y="15.4" width="2.3" height="1.6" fill="#1c140e"/><rect x="32.3" y="15.4" width="2.3" height="1.6" fill="#1c140e"/>
+<path d="M37 24.5 l6.5 5" stroke="#4a4256" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M24 21.5 h15 l3.5 14 h-20.5 Z" fill="#4a4256"/><path d="M24 21.5 h4 l-1 14 h-4.5 Z" fill="#3d3648"/>
+<line x1="26.5" y1="23" x2="37" y2="33" stroke="#39334a" stroke-width="2.2"/>
+<rect x="2" y="26" width="32" height="3" fill="${GM}"/><rect x="2" y="25" width="3.5" height="5" fill="${GB}"/>
+<rect x="19" y="22.5" width="9" height="3.2" rx="1.5" fill="${GB}"/><circle cx="21" cy="24" r="1.1" fill="${R}"/>
+<line x1="9" y1="29" x2="6" y2="36" stroke="${GB}" stroke-width="1.8"/><line x1="13" y1="29" x2="16" y2="36" stroke="${GB}" stroke-width="1.8"/>
+<path d="M27 24 l-11 3.6" stroke="#4a4256" stroke-width="3.5" stroke-linecap="round"/><circle cx="15.5" cy="27.8" r="2.2" fill="${SK}"/>
+<rect x="25" y="35.5" width="6" height="14.5" fill="#413a4d"/><rect x="33" y="35.5" width="6" height="14.5" fill="#38323f"/>
+<rect x="24" y="49" width="8.4" height="5" rx="1" fill="#26222b"/><rect x="32.5" y="49" width="8.4" height="5" rx="1" fill="#26222b"/>`),
+labguard:svgS(`
+<line x1="32" y1="4.5" x2="32" y2="8" stroke="${CY}" stroke-width="1.3"/><circle cx="32" cy="4" r="1.1" fill="${CY}"/>
+<rect x="25" y="8" width="14" height="10.5" rx="3" fill="#39434a"/>
+<rect x="26.5" y="11" width="11" height="3" rx="1.5" fill="#0d1214"/><rect x="27.5" y="11.6" width="9" height="1.8" rx=".9" fill="${CY}"/>
+<rect x="18" y="19.5" width="7" height="6" rx="2" fill="#525d55"/><rect x="39" y="19.5" width="7" height="6" rx="2" fill="#525d55"/>
+<path d="M23 20.5 h18 l1.5 15.5 h-21 Z" fill="#6e7a6b"/><path d="M23 20.5 h4 l-1 15.5 h-4.4 Z" fill="#5d685c"/>
+<circle cx="32" cy="26.5" r="2.9" fill="#0d1214"/><circle cx="32" cy="26.5" r="1.6" fill="${CY}"/>
+<path d="M26 32 h12" stroke="#525d55" stroke-width="1.2"/>
+<rect x="7.5" y="25.5" width="16" height="4.4" rx="2" fill="${AR}"/><rect x="7.5" y="26.3" width="2.6" height="2.8" fill="${CY}"/>
+<path d="M25 23 l-8 3.5" stroke="#6e7a6b" stroke-width="3.4" stroke-linecap="round"/>
+<rect x="26" y="36" width="5" height="13.5" fill="#525d55"/><rect x="33.5" y="36" width="5" height="13.5" fill="#48524a"/>
+<line x1="28.5" y1="38" x2="28.5" y2="47" stroke="${CY}" stroke-width=".8" opacity=".6"/><line x1="36" y1="38" x2="36" y2="47" stroke="${CY}" stroke-width=".8" opacity=".6"/>
+<path d="M24.5 49.5 h8 l-1 4 h-7.5 Z" fill="${AR}"/><path d="M32.5 49.5 h8 l-.5 4 h-7.5 Z" fill="${AR}"/>`),
+hive:svgS(`
+<ellipse cx="12" cy="18" rx="7.5" ry="2.3" fill="${G}" opacity=".5"/><ellipse cx="52" cy="18" rx="7.5" ry="2.3" fill="${G}" opacity=".5"/>
+<ellipse cx="12" cy="44" rx="7.5" ry="2.3" fill="${G}" opacity=".5"/><ellipse cx="52" cy="44" rx="7.5" ry="2.3" fill="${G}" opacity=".5"/>
+<line x1="24" y1="27" x2="12" y2="18" stroke="${AR}" stroke-width="2.6"/><line x1="40" y1="27" x2="52" y2="18" stroke="${AR}" stroke-width="2.6"/>
+<line x1="24" y1="36" x2="12" y2="44" stroke="${AR}" stroke-width="2.6"/><line x1="40" y1="36" x2="52" y2="44" stroke="${AR}" stroke-width="2.6"/>
+<path d="M25 24 h14 l5 7.5 -5 7.5 h-14 l-5 -7.5 Z" fill="${MB}" stroke="#3a4438" stroke-width="1.5"/>
+<circle cx="29" cy="30" r="2.8" fill="#20241c"/><circle cx="29" cy="30" r="1.6" fill="${R}"/>
+<circle cx="37" cy="27.5" r="1" fill="${A}"/>
+<rect x="27" y="37" width="12" height="5" rx="1.5" fill="#333a2b"/>
+<circle cx="30" cy="39.5" r="1.4" fill="${CY}"/><circle cx="34" cy="39.5" r="1.4" fill="${CY}"/><circle cx="38" cy="39.5" r="1.4" fill="${CY}" opacity=".5"/>
+<line x1="32" y1="20" x2="32" y2="24" stroke="${AR}" stroke-width="1.4"/><circle cx="32" cy="19.5" r="1" fill="${R}"/>`),
+prime:svgS(`
+<line x1="32" y1="3" x2="32" y2="6.5" stroke="${R}" stroke-width="1.4"/><circle cx="32" cy="2.5" r="1.2" fill="${R}"/>
+<rect x="24" y="6.5" width="16" height="11.5" rx="3" fill="#39434a" stroke="${CY}" stroke-width="1"/>
+<rect x="26" y="10" width="12" height="3.4" rx="1.7" fill="#0d1214"/><rect x="27" y="10.7" width="10" height="2" rx="1" fill="${R}"/>
+<rect x="14" y="16.5" width="10.5" height="8" rx="2.5" fill="#525d55"/><rect x="39.5" y="16.5" width="10.5" height="8" rx="2.5" fill="#525d55"/>
+<circle cx="17.5" cy="19" r=".9" fill="${HL}"/><circle cx="46.5" cy="19" r=".9" fill="${HL}"/>
+<path d="M20 18 h24 l2.5 20 h-29 Z" fill="#6e7a6b" stroke="#39434a" stroke-width="1.4"/><path d="M20 18 h5 l-1.5 20 h-5.5 Z" fill="#5d685c"/>
+<rect x="27" y="20.5" width="10" height="8.5" rx="1" fill="#39434a"/>
+<circle cx="32" cy="24.8" r="2.8" fill="${CY}"/><circle cx="32" cy="24.8" r="1.2" fill="#c9eef4"/>
+<path d="M24 31.5 h16 M24 34.5 h16" stroke="#525d55" stroke-width="1.4"/>
+<rect x="4.5" y="25" width="18" height="5.2" rx="2.5" fill="${AR}"/><rect x="4.5" y="26" width="3" height="3.2" fill="${R}"/>
+<path d="M23 23.5 l-8 4" stroke="#6e7a6b" stroke-width="4" stroke-linecap="round"/>
+<rect x="23.5" y="38" width="7" height="12.5" fill="#525d55"/><rect x="33.5" y="38" width="7" height="12.5" fill="#48524a"/>
+<rect x="23.5" y="41" width="7" height="3.2" rx="1" fill="#39434a"/><rect x="33.5" y="41" width="7" height="3.2" rx="1" fill="#39434a"/>
+<path d="M22 50.5 h9.5 l-1 4.5 h-9 Z" fill="${AR}"/><path d="M33 50.5 h9.5 l-.5 4.5 h-9 Z" fill="${AR}"/>`),
+overwatch:svgS(`
+<rect x="25" y="7" width="14" height="11" rx="3.5" fill="#2b2733"/>
+<circle cx="29" cy="12.5" r="2.6" fill="#0d0b12"/><circle cx="29" cy="12.5" r="1.5" fill="${R}"/><circle cx="28.4" cy="11.9" r=".5" fill="#ffd9d2"/>
+<path d="M39 12 h3 l-1 4 h-2 Z" fill="#3d3648"/>
+<path d="M22.5 19 h19 l4 17 h-14 l-2 -3 -2 3 h-9 Z" fill="#3d3648"/><path d="M22.5 19 h4.5 l-1.5 17 h-5.5 Z" fill="#332e40"/>
+<path d="M42 20 l6 12 -3 4" stroke="#332e40" stroke-width="2.5" fill="none"/>
+<rect x="27" y="21.5" width="10" height="3" rx="1" fill="#2b2733"/><rect x="29" y="22.1" width="6" height="1.8" fill="${R}" opacity=".6"/>
+<rect x="1" y="26" width="34" height="4.2" fill="${GM}"/><rect x="1" y="24.5" width="2.5" height="7" fill="${GB}"/><rect x="4" y="24.5" width="2" height="7" fill="${GB}"/>
+<rect x="17" y="21.5" width="10" height="3.6" rx="1.5" fill="${GB}"/><circle cx="19.5" cy="23.3" r="1.2" fill="${R}"/>
+<path d="M27 24.5 l-12 3.4" stroke="#3d3648" stroke-width="3.6" stroke-linecap="round"/><circle cx="14.5" cy="28.2" r="2.3" fill="#2b2733"/>
+<rect x="24" y="36" width="6.5" height="13" fill="#332e40"/><rect x="33.5" y="36" width="6.5" height="13" fill="#2b2733"/>
+<rect x="24" y="39.5" width="6.5" height="3" rx="1" fill="#2b2733"/><rect x="33.5" y="39.5" width="6.5" height="3" rx="1" fill="#2b2733"/>
+<rect x="22.5" y="48.5" width="9" height="5.4" rx="1" fill="#1e1b26"/><rect x="32.5" y="48.5" width="9" height="5.4" rx="1" fill="#1e1b26"/>
+<rect x="22.5" y="52.5" width="19" height="1.4" fill="${R}" opacity=".4"/>`),
 };
 const TURRET_SVG=`<svg viewBox="0 0 64 64">
 <ellipse cx="32" cy="57" rx="16" ry="3" fill="rgba(0,0,0,.5)"/>
@@ -888,24 +958,38 @@ const PERKS=[
   {n:'Field Dressing',d:'Heal 15% max HP after every combat',once:'postheal',f:()=>P.flags.postheal=true},
 ];
 const ENEMIES=[
+  // Rust Yards — raider crews
   {id:'raider',name:'Raider',hp:26,dmg:[5,8],w:3},
   {id:'rusher',name:'Rusher',hp:18,dmg:[3,5],double:true,w:2},
   {id:'gunner',name:'Gunner',hp:32,dmg:[6,9],w:3},
-  {id:'drone',name:'Recon Drone',hp:15,dmg:[4,6],dodge:.25,w:2},
-  {id:'shield',name:'Shield Trooper',hp:36,dmg:[5,8],armor:2,w:2},
   {id:'gren',name:'Grenadier',hp:28,dmg:[5,8],charge:[12,17],w:2},
+  // Blacksite Labs — escaped hardware. Signature mechanic: energy shields (cyan bar, absorbed before HP) + drone swarms
+  {id:'drone',name:'Recon Drone',hp:15,dmg:[4,6],dodge:.25,w:2},
+  {id:'labguard',name:'Prototype Guard',hp:24,dmg:[5,8],shield:12,w:3},
+  {id:'hive',name:'Hive Drone',hp:20,dmg:[3,5],dodge:.15,summon:true,w:2},
+  // Signal Spire — warlord military. Signature mechanic: snipers MARK you (+40% damage taken until end of next enemy turn)
+  {id:'sniper',name:'Spire Sniper',hp:22,dmg:[8,12],mark:true,w:2},
+  {id:'shield',name:'Shield Trooper',hp:36,dmg:[5,8],armor:2,w:2},
 ];
 const ELITES=[
   {id:'enf',name:'⚠ Elite Enforcer',hp:60,dmg:[9,12],armor:2},
   {id:'heli',name:'⚠ Hunter Drone',hp:54,dmg:[6,9],dodge:.25,double:true},
   {id:'jug',name:'⚠ Juggernaut',hp:78,dmg:[8,11],armor:3,charge:[16,22]},
+  {id:'prime',name:'⚠ X-Series Prime',hp:52,dmg:[8,11],armor:1,shield:25},
+  {id:'overwatch',name:'⚠ Overwatch',hp:50,dmg:[11,15],dodge:.15,mark:true},
 ];
 const DUNGEONS=[
   {id:'rust',name:'RUST YARDS',flavor:'Scrap city ruled by raider crews.',
+   intel:'Raider crews: rushers, gunners, grenadiers.',
+   pool:['raider','rusher','gunner','gren'],elites:['enf'],
    boss:{id:'foreman',name:'★ THE FOREMAN',hp:140,dmg:[11,15],armor:2,summon:true}},
   {id:'lab',name:'BLACKSITE LABS',flavor:'Something got out. It armed itself.',
-   boss:{id:'proto',name:'★ PROTOTYPE X-1',hp:135,dmg:[9,13],enrage:true}},
+   intel:'Energy-shielded prototypes & drone swarms. Shields soak damage before HP.',
+   pool:['drone','labguard','hive'],elites:['heli','prime'],
+   boss:{id:'proto',name:'★ PROTOTYPE X-1',hp:125,dmg:[9,13],shield:35,enrage:true}},
   {id:'spire',name:'SIGNAL SPIRE',flavor:'Warlord territory. Jamming everything.',
+   intel:'Snipers MARK you: +40% damage taken until end of next enemy turn. Kill them first.',
+   pool:['sniper','shield','gunner','rusher'],elites:['jug','overwatch'],
    boss:{id:'kessler',name:'★ WARLORD KESSLER',hp:150,dmg:[10,14],charge:[17,23]}},
 ];
 const ARMORY=[
@@ -1162,31 +1246,36 @@ function enterNode(n){
 function scaleE(base,tier,layer){
   layer=layer||0;
   const m=(1+0.35*tier)*(1+0.022*layer),d=(1+0.22*tier)*(1+0.014*layer);
+  const sh=base.shield?Math.round(base.shield*m):0;
   return {id:base.id,name:base.name,hp:Math.round(base.hp*m),max:Math.round(base.hp*m),
     dmg:[Math.round(base.dmg[0]*d),Math.round(base.dmg[1]*d)],
     armor:base.armor||0,dodge:base.dodge||0,double:!!base.double,
     charge:base.charge?[Math.round(base.charge[0]*d),Math.round(base.charge[1]*d)]:null,
+    shield:sh,shmax:sh,mark:!!base.mark,
     summon:!!base.summon,enrage:!!base.enrage,charging:false,stun:0,suppress:0,dazed:0,intent:null};
 }
 function startCombat(kind){
   const t=RUN.tier;
   const layer=RUN.pos?RUN.pos.layer:0;
+  const dg=dungeon();
+  const pool=dg.pool.map(id=>ENEMIES.find(e=>e.id===id));
+  const epool=dg.elites.map(id=>ELITES.find(e=>e.id===id));
   let foes=[];
   if(kind==='fight'){
     const n=ri(1,Math.min(3,1+Math.floor(rf()*2)+ (t>0?1:0)));
     const count=clamp(n,1,3);
-    for(let i=0;i<count;i++)foes.push(scaleE(pick(ENEMIES),t,layer));
+    for(let i=0;i<count;i++)foes.push(scaleE(pick(pool),t,layer));
   }else if(kind==='elite'){
-    const e=scaleE(pick(ELITES),t,layer);e.big=true; // hardened: resists full stuns
+    const e=scaleE(pick(epool),t,layer);e.big=true; // hardened: resists full stuns
     foes.push(e);
-    if(rf()<.4)foes.push(scaleE(pick(ENEMIES),t,layer));
+    if(rf()<.4)foes.push(scaleE(pick(pool),t,layer));
   }else{
-    const b=scaleE(dungeon().boss,t,0);b.big=true; // bosses tuned as fixed endpoints
+    const b=scaleE(dg.boss,t,0);b.big=true; // bosses tuned as fixed endpoints
     foes.push(b);
   }
   const apm=3+tr('apx');
   C={kind,foes,turrets:[],mines:0,target:0,ap:apm,apmax:apm,
-     aim:0,camo:0,firstAtk:true,
+     aim:0,camo:0,marked:0,firstAtk:true,
      killedThisTurn:false,streak:0,lsUsed:false,turn:1,busy:false,ammo:{}};
   equippedWeapons().forEach(it=>{
     const w=wstat(it);
@@ -1219,6 +1308,7 @@ function resumeRun(data){
 }
 function setIntent(f){
   if(f.stun>0){f.intent={t:'stunned'};return;}
+  if(f.mark&&C&&!(C.marked>0)&&rf()<.6){f.intent={t:'mark'};return;}
   if(f.charge&&!f.charging&&rf()<.35){f.charging=true;f.intent={t:'charge'};return;}
   if(f.charging){f.charging=false;f.intent={t:'heavy',d:f.charge};return;}
   if(f.summon&&C&&C.turn%3===0){f.intent={t:'summon'};return;}
@@ -1227,6 +1317,7 @@ function setIntent(f){
 function intentText(f){
   const i=f.intent;if(!i)return'';
   if(i.t==='stunned')return'⚡STUN';
+  if(i.t==='mark')return'◎MARKING';
   if(i.t==='charge')return'▲CHARGING';
   if(i.t==='heavy')return`▶HVY ${i.d[0]}–${i.d[1]}`;
   if(i.t==='summon')return'▶BACKUP';
@@ -1248,8 +1339,9 @@ function renderCombat(){
     d.style.width=fw+'px';
     d.innerHTML=`${SPRITES[f.id]||''}<div class="figshadow"></div>
       <div class="fname">${f.name}</div>
+      ${f.shmax?`<div class="ebar sh"><i style="width:${Math.max(0,f.shield/f.shmax*100)}%"></i></div>`:''}
       <div class="ebar"><i style="width:${Math.max(0,f.hp/f.max*100)}%"></i></div>
-      <div class="esub">${Math.max(0,f.hp)}/${f.max}${f.armor?' A'+f.armor:''}${f.dodge?' EV':''}</div>
+      <div class="esub">${Math.max(0,f.hp)}/${f.max}${f.shield>0?' ⬡'+f.shield:''}${f.armor?' A'+f.armor:''}${f.dodge?' EV':''}</div>
       <div class="eintent">${f.hp>0?intentText(f):'DOWN'}</div>`;
     d.onclick=()=>{if(f.hp>0&&!C.busy){C.target=i;renderCombat();}};
     if(f._fx){retrig(d,'hitflash');f._fx=false;}
@@ -1260,6 +1352,7 @@ function renderCombat(){
   $('ap-pips').textContent='◆'.repeat(C.ap)+'◇'.repeat(Math.max(0,C.apmax-C.ap));
   // effects
   const eff=[];
+  if(C.marked>0)eff.push('⚠MARKED +40%');
   if(C.aim>0)eff.push('AIM ×'+C.aim);
   if(C.camo>0)eff.push('CAMO '+C.camo);
   if(C.mines>0)eff.push('MINES ×'+C.mines);
@@ -1364,6 +1457,15 @@ function fireShot(w,f){
   if(w.supp&&f.hp>0)f.suppress=1;
 }
 function hitEnemy(f,dmg,crit,src){
+  // energy shields (Labs) absorb damage before HP
+  if(f.shield>0){
+    const abs=Math.min(f.shield,dmg);
+    f.shield-=abs;dmg-=abs;
+    floatAt(enemyCard(f),'-'+abs,'sh');
+    f._fx=true;
+    log(f.shield<=0?`${src} BREAKS ${f.name}'s energy shield!`:`${src} hits ${f.name}'s shield for <b>${abs}</b>`,f.shield<=0?'sys':'hit');
+    if(dmg<=0){if(crit)shakeScreen();return;}
+  }
   f.hp-=dmg;
   floatAt(enemyCard(f),dmg,crit?'crit':'');
   f._fx=true;
@@ -1421,11 +1523,19 @@ $('btn-endturn').onclick=async()=>{
     await sleep(300);
     if(!C||P.hp<=0)return;
     if(i.t==='stunned'){f.stun=0;log(f.name+' is stunned — skips turn.','sys');continue;}
+    if(i.t==='mark'){
+      C.marked=2; // boosts enemy damage for the rest of this phase and all of the next
+      log(f.name+' paints you with a targeting laser — MARKED! Enemies deal +40% damage.','dmg');
+      floatAt($('player-avatar'),'MARKED','pdmg');
+      renderCombat();await sleep(300);
+      continue;
+    }
     if(i.t==='charge'){log(f.name+' is winding up something heavy…','dmg');continue;}
     if(i.t==='summon'){
       if(C.foes.filter(x=>x.hp>0).length<3){
-        const nf=scaleE(ENEMIES[3],RUN.tier,RUN.pos?RUN.pos.layer:0);setIntent(nf);C.foes.push(nf);
-        log(f.name+' calls in a Recon Drone!','dmg');
+        const base=ENEMIES.find(e=>e.id===dungeon().pool[0]);
+        const nf=scaleE(base,RUN.tier,RUN.pos?RUN.pos.layer:0);setIntent(nf);C.foes.push(nf);
+        log(f.name+' calls in backup — a '+nf.name+'!','dmg');
         renderCombat();await sleep(350);
       }
       continue;
@@ -1440,6 +1550,7 @@ $('btn-endturn').onclick=async()=>{
       }
       if(C.camo>0){log('Camouflaged — '+f.name+' fires blind and misses.','good');floatAt($('player-avatar'),'HIDDEN','miss');continue;}
       let d=ri(i.d[0],i.d[1]);
+      if(C.marked>0){d=Math.round(d*1.4);}
       if(f.dazed>0){d=Math.round(d*.5);}
       if(f.suppress>0){d=Math.round(d*.75);}
       if(f.enrage&&f.hp<f.max/2)d=Math.round(d*1.4);
@@ -1457,6 +1568,7 @@ $('btn-endturn').onclick=async()=>{
   C.turn++;
   C.ap=C.apmax;C.killedThisTurn=false;C.busy=false;
   if(C.camo>0)C.camo--;
+  if(C.marked>0)C.marked--;
   for(const k in P.cds)if(P.cds[k]>0)P.cds[k]--;
   C.foes.forEach(f=>{if(f.hp>0)setIntent(f);});
   renderCombat();
@@ -1714,7 +1826,7 @@ function showVictory(){
   const el=$('vic-opts');el.innerHTML='';
   DUNGEONS.filter(d=>d.id!==RUN.dungeon).forEach(d=>{
     const b=document.createElement('button');b.className='choice';
-    b.innerHTML=`<b>${d.name}</b> — boss: ${d.boss.name}<br><span class="small">${d.flavor}</span>`;
+    b.innerHTML=`<b>${d.name}</b> — boss: ${d.boss.name}<br><span class="small">${d.flavor}</span><br><span class="small" style="color:var(--cyan)">INTEL: ${d.intel}</span>`;
     b.onclick=()=>{
       RUN.tier++;RUN.dungeon=d.id;RUN.map=genMap();RUN.pos=null;
       heal(Math.round(P.maxhp*.4));
